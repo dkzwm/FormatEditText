@@ -181,9 +181,9 @@ public class FormattedEditText extends EditText {
         mIsFormatted = true;
         setText(sb.toString());
         if (start == selection && selection <= sb.length()) {
-            for (int mP : mPlaceHoldersPosition) {
-                if (selection == mP + 1) {
-                    setSelection(mP);
+            for (int position : mPlaceHoldersPosition) {
+                if (selection == position + 1) {
+                    setSelection(position);
                     return;
                 }
             }
@@ -214,6 +214,8 @@ public class FormattedEditText extends EditText {
                 }
             }
             setSelection(start + count + addPlaceHolderCount);
+        } else if (start == 0 && count == 0) {
+            setSelection(0);
         } else {
             setSelection(sb.length());
         }

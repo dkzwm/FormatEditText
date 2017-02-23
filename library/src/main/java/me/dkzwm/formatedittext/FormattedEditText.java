@@ -64,21 +64,10 @@ public class FormattedEditText extends EditText {
             TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.FormattedEditText,
                     defStyleAttr, 0);
             String formatStyle = ta.getString(R.styleable.FormattedEditText_formatStyle);
-            if (formatStyle != null) {
-                boolean isNumeric = isNumeric(formatStyle);
-                if (isNumeric) {
-                    mPlaceHoldersPosition = new int[formatStyle.length()];
-                    mPlaceHoldersPosition[0] = Character.getNumericValue(formatStyle.charAt(0));
-                    for (int i = 1; i < formatStyle.length(); i++) {
-                        int number = Character.getNumericValue(formatStyle.charAt(i));
-                        mPlaceHoldersPosition[i] = mPlaceHoldersPosition[i - 1] + 1 + number;
-                    }
-                } else
-                    throw new IllegalArgumentException("format style must be numeric");
-            }
+            setFormatStyle(formatStyle);
             String placeHolder = ta.getString(R.styleable.FormattedEditText_placeHolder);
             if (placeHolder != null) {
-                mPlaceHolder = placeHolder.charAt(0);
+                setPlaceHolder(placeHolder.charAt(0));
             } else {
                 mPlaceHolder = DEFAULT_PLACE_HOLDER;
             }
@@ -107,6 +96,25 @@ public class FormattedEditText extends EditText {
                 mWatchers.remove(i);
             }
         }
+    }
+
+    public void setFormatStyle(String style) {
+        if (style != null) {
+            boolean isNumeric = isNumeric(style);
+            if (isNumeric) {
+                mPlaceHoldersPosition = new int[style.length()];
+                mPlaceHoldersPosition[0] = Character.getNumericValue(style.charAt(0));
+                for (int i = 1; i < style.length(); i++) {
+                    int number = Character.getNumericValue(style.charAt(i));
+                    mPlaceHoldersPosition[i] = mPlaceHoldersPosition[i - 1] + 1 + number;
+                }
+            } else
+                throw new IllegalArgumentException("format style must be numeric");
+        }
+    }
+
+    public void setPlaceHolder(char holder) {
+        mPlaceHolder = holder;
     }
 
     private void sendBeforeTextChanged(CharSequence text, int start, int before, int after) {
@@ -211,7 +219,7 @@ public class FormattedEditText extends EditText {
         }
     }
 
-    public static boolean isNumeric(String str) {
+    private static boolean isNumeric(String str) {
         for (int i = str.length(); --i >= 0; ) {
             if (!Character.isDigit(str.charAt(i))) {
                 return false;

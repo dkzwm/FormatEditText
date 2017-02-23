@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              tools:context=".MainActivity">
+
+    <me.dkzwm.formatedittext.FormattedEditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:maxLines="13"
+        android:text="18099999999"
+        android:textColor="@color/colorPrimary"
+        android:textSize="16sp"
+        app:formatStyle="344"/>
+
+    <me.dkzwm.formatedittext.FormattedEditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="12345123456123456712345678"
+        android:textColor="@color/colorPrimary"
+        android:textSize="16sp"
+        app:formatStyle="5678"
+        app:placeHolder="-"/>
+
+    <me.dkzwm.formatedittext.FormattedEditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPrimary"
+        android:textSize="16sp"
+        app:formatStyle="344"
+        app:placeHolder="-"/>
+</LinearLayout>

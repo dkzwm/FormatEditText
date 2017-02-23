@@ -1,0 +1,7 @@
+<resources>
+
+    <declare-styleable name="FormattedEditText">
+        <attr name="formatStyle" format="string"/>
+        <attr name="placeHolder" format="string"/>
+    </declare-styleable>
+</resources>

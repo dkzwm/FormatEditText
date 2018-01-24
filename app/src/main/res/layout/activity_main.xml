@@ -7,7 +7,7 @@
               android:orientation="vertical"
               tools:context=".MainActivity">
 
-    <me.dkzwm.formatedittext.FormattedEditText
+    <me.dkzwm.widget.fet.FormattedEditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:inputType="number"
@@ -17,7 +17,7 @@
         android:textSize="16sp"
         app:formatStyle="344"/>
 
-    <me.dkzwm.formatedittext.FormattedEditText
+    <me.dkzwm.widget.fet.FormattedEditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="12345123456123456712345678"
@@ -26,7 +26,7 @@
         app:formatStyle="5678"
         app:placeHolder="-"/>
 
-    <me.dkzwm.formatedittext.FormattedEditText
+    <me.dkzwm.widget.fet.FormattedEditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="@color/colorPrimary"

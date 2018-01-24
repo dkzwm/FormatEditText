@@ -1,4 +1,4 @@
-package me.dkzwm.formatedittext.sample;
+package me.dkzwm.widget.sample;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;

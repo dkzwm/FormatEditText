@@ -1,4 +1,4 @@
-package me.dkzwm.formatedittext;
+package me.dkzwm.widget.fet;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -34,7 +34,7 @@ public class FormattedEditText extends EditText {
         TextWatcher textWatcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                if (mIsFormatted || mPlaceHoldersPosition == null) {
+                if (mIsFormatted || mPlaceHoldersPosition == null || s.length() == 0) {
                     sendBeforeTextChanged(s, start, count, after);
                 }
             }
@@ -45,7 +45,7 @@ public class FormattedEditText extends EditText {
                     sendOnTextChanged(s, start, before, count);
                     return;
                 }
-                if (mIsFormatted) {
+                if (mIsFormatted || s.length() == 0) {
                     mIsFormatted = false;
                     sendOnTextChanged(s, start, before, count);
                 } else {
@@ -55,17 +55,17 @@ public class FormattedEditText extends EditText {
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (mIsFormatted || mPlaceHoldersPosition == null)
+                if (mIsFormatted || mPlaceHoldersPosition == null || s.length() == 0)
                     sendAfterTextChanged(s);
             }
         };
         super.addTextChangedListener(textWatcher);
         if (attrs != null) {
-            TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.FormattedEditText,
+            TypedArray ta = context.obtainStyledAttributes(attrs, me.dkzwm.widget.R.styleable.FormattedEditText,
                     defStyleAttr, 0);
-            String formatStyle = ta.getString(R.styleable.FormattedEditText_formatStyle);
+            String formatStyle = ta.getString(me.dkzwm.widget.R.styleable.FormattedEditText_formatStyle);
             setFormatStyle(formatStyle);
-            String placeHolder = ta.getString(R.styleable.FormattedEditText_placeHolder);
+            String placeHolder = ta.getString(me.dkzwm.widget.R.styleable.FormattedEditText_placeHolder);
             if (placeHolder != null) {
                 setPlaceHolder(placeHolder.charAt(0));
             } else {
@@ -78,6 +78,15 @@ public class FormattedEditText extends EditText {
         if (getText().length() > 0) {
             formattedText(getText().toString(), 0, getText().length());
         }
+    }
+
+    private static boolean isNumeric(String str) {
+        for (int i = str.length(); --i >= 0; ) {
+            if (!Character.isDigit(str.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -219,15 +228,6 @@ public class FormattedEditText extends EditText {
         } else {
             setSelection(sb.length());
         }
-    }
-
-    private static boolean isNumeric(String str) {
-        for (int i = str.length(); --i >= 0; ) {
-            if (!Character.isDigit(str.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
     }
 
 

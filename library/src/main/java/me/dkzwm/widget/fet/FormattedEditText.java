@@ -61,11 +61,11 @@ public class FormattedEditText extends EditText {
         };
         super.addTextChangedListener(textWatcher);
         if (attrs != null) {
-            TypedArray ta = context.obtainStyledAttributes(attrs, me.dkzwm.widget.R.styleable.FormattedEditText,
+            TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.FormattedEditText,
                     defStyleAttr, 0);
-            String formatStyle = ta.getString(me.dkzwm.widget.R.styleable.FormattedEditText_formatStyle);
+            String formatStyle = ta.getString(R.styleable.FormattedEditText_formatStyle);
             setFormatStyle(formatStyle);
-            String placeHolder = ta.getString(me.dkzwm.widget.R.styleable.FormattedEditText_placeHolder);
+            String placeHolder = ta.getString(R.styleable.FormattedEditText_placeHolder);
             if (placeHolder != null) {
                 setPlaceHolder(placeHolder.charAt(0));
             } else {

@@ -1,9 +1,21 @@
 # FormatEditText
 Two attributes
-1.formatStyle such as "344";
-2.placeHolder such as " ";
+ 1.FormatStyle such as "344";    
+ 2.PlaceHolder such as " ";    
 
 Can be used to format phone numbers like 3-4-4 format; such as "170 0000 0000";
+
+## Gradle
+```groovy
+repositories {  
+    ...
+    maven { url 'https://jitpack.io' }  
+}
+
+dependencies {  
+    compile 'com.github.dkzwm:FormatEditText:0.0.1’
+}
+``` 
 
 ## Snapshot
 <img src='snapshot.png'></img>

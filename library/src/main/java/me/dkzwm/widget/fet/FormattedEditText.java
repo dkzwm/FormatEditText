@@ -8,6 +8,7 @@ import android.util.AttributeSet;
 import android.widget.EditText;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by dkzwm on 2017/2/22.
@@ -18,8 +19,9 @@ public class FormattedEditText extends EditText {
     private static final char DEFAULT_PLACE_HOLDER = ' ';
     private char mPlaceHolder;
     private int[] mPlaceHoldersPosition;
-    private ArrayList<TextWatcher> mWatchers;
+    private List<TextWatcher> mWatchers;
     private boolean mIsFormatted = false;
+    private StringBuilder mTextBuilder = new StringBuilder();
 
     public FormattedEditText(Context context) {
         this(context, null, android.R.attr.editTextStyle);
@@ -49,7 +51,7 @@ public class FormattedEditText extends EditText {
                     mIsFormatted = false;
                     sendOnTextChanged(s, start, before, count);
                 } else {
-                    formattedText(s, start, count);
+                    formattedText(s, start, before, count);
                 }
             }
 
@@ -76,7 +78,8 @@ public class FormattedEditText extends EditText {
             mPlaceHolder = DEFAULT_PLACE_HOLDER;
         }
         if (getText().length() > 0) {
-            formattedText(getText().toString(), 0, getText().length());
+            formattedText(getText().toString(), 0, 0, getText().length());
+            setSelection(getText().length());
         }
     }
 
@@ -118,7 +121,7 @@ public class FormattedEditText extends EditText {
                     mPlaceHoldersPosition[i] = mPlaceHoldersPosition[i - 1] + 1 + number;
                 }
             } else
-                throw new IllegalArgumentException("format style must be numeric");
+                throw new IllegalArgumentException("Format style must be numeric");
         }
     }
 
@@ -128,7 +131,7 @@ public class FormattedEditText extends EditText {
 
     private void sendBeforeTextChanged(CharSequence text, int start, int before, int after) {
         if (mWatchers != null) {
-            final ArrayList<TextWatcher> list = mWatchers;
+            final List<TextWatcher> list = mWatchers;
             final int size = list.size();
             for (int i = 0; i < size; i++) {
                 list.get(i).beforeTextChanged(text, start, before, after);
@@ -138,7 +141,7 @@ public class FormattedEditText extends EditText {
 
     private void sendOnTextChanged(CharSequence s, int start, int before, int count) {
         if (mWatchers != null) {
-            final ArrayList<TextWatcher> list = mWatchers;
+            final List<TextWatcher> list = mWatchers;
             final int size = list.size();
             for (int i = 0; i < size; i++) {
                 list.get(i).onTextChanged(s, start, before, count);
@@ -148,7 +151,7 @@ public class FormattedEditText extends EditText {
 
     private void sendAfterTextChanged(Editable s) {
         if (mWatchers != null) {
-            final ArrayList<TextWatcher> list = mWatchers;
+            final List<TextWatcher> list = mWatchers;
             final int size = list.size();
             for (int i = 0; i < size; i++) {
                 list.get(i).afterTextChanged(s);
@@ -156,10 +159,10 @@ public class FormattedEditText extends EditText {
         }
     }
 
-    private void formattedText(CharSequence s, int start, int count) {
+    private void formattedText(final CharSequence s, int start, int before, int count) {
         if (s.length() == 0)
             return;
-        StringBuilder sb = new StringBuilder();
+        mTextBuilder.setLength(0);
         int nowPosition = 0;
         if (count > 0) {
             int realCount = 0;
@@ -169,66 +172,38 @@ public class FormattedEditText extends EditText {
             }
             count = realCount;
         }
-        for (int i = 0; i < s.length(); i++) {
+        final int originLength = s.length();
+        int appendHolderCount = 0;
+        for (int i = 0; i < originLength; i++) {
             if (s.charAt(i) == mPlaceHolder)
                 continue;
             if (nowPosition >= mPlaceHoldersPosition.length) {
-                sb.append(s.charAt(i));
+                mTextBuilder.append(s.charAt(i));
             } else {
-                if (sb.length() < mPlaceHoldersPosition[nowPosition]) {
-                    sb.append(s.charAt(i));
-                } else if (sb.length() == mPlaceHoldersPosition[nowPosition]) {
-                    sb.append(mPlaceHolder);
-                    sb.append(s.charAt(i));
+                if (mTextBuilder.length() < mPlaceHoldersPosition[nowPosition]) {
+                    mTextBuilder.append(s.charAt(i));
+                } else if (mTextBuilder.length() == mPlaceHoldersPosition[nowPosition]) {
+                    mTextBuilder.append(mPlaceHolder);
+                    if (i >= start) {
+                        appendHolderCount++;
+                    }
+                    mTextBuilder.append(s.charAt(i));
                 } else {
-                    sb.append(s.charAt(i));
+                    mTextBuilder.append(s.charAt(i));
                     nowPosition++;
                 }
             }
         }
-        int selection = getSelectionStart();
         mIsFormatted = true;
-        setText(sb.toString());
-        if (start == selection && selection <= sb.length()) {
-            for (int position : mPlaceHoldersPosition) {
-                if (selection == position + 1) {
-                    setSelection(position);
-                    return;
-                }
-            }
-            setSelection(selection);
-        } else if (selection <= sb.length() && selection > start
-                && count > 0 && start + count <= sb.length()) {
-            int fistPos = mPlaceHoldersPosition.length;
-            for (int i = 0; i < mPlaceHoldersPosition.length; i++) {
-                if (start <= mPlaceHoldersPosition[i]) {
-                    fistPos = i;
-                    break;
-                }
-            }
-            int addPlaceHolderCount = 0;
-            if (fistPos != mPlaceHoldersPosition.length) {
-                int used = 0;
-                for (int i = fistPos; i < mPlaceHoldersPosition.length; i++) {
-                    if (used > count)
-                        break;
-                    for (int j = used; j < count; j++) {
-                        if (start + j + addPlaceHolderCount
-                                == mPlaceHoldersPosition[i]) {
-                            addPlaceHolderCount++;
-                            used = j;
-                            break;
-                        }
-                    }
-                }
-            }
-            setSelection(start + count + addPlaceHolderCount);
-        } else if (start == 0 && count == 0) {
-            setSelection(0);
+        if (before > 0) {
+            setText(mTextBuilder.toString());
+            if (start > mTextBuilder.length())
+                setSelection(mTextBuilder.length());
+            else
+                setSelection(start);
         } else {
-            setSelection(sb.length());
+            setText(mTextBuilder.toString());
+            setSelection(start + count + appendHolderCount);
         }
     }
-
-
 }

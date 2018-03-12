@@ -1,10 +1,12 @@
 # FormatEditText
-## English| [中文](https://github.com/dkzwm/FormatEditText/blob/master/README_CN.md) 
-Two attributes    
- - 1.FormatStyle such as "344";    
- - 2.PlaceHolder such as " ";    
-
-Can be used to format phone numbers like 3-4-4 format; such as "170-0000-0000";    
+## [English](https://github.com/dkzwm/FormatEditText/blob/master/README.md) | 中文
+<p>
+FormatEditText可以用来当做号码格式化文本输入框使用，例如可以用来作为格式化手机号码、格式化身份证号码，格式化银行卡号码等。    
+例如:指定样式为`344`插入字符为`-`，手动一次输入`13012345678`，那么最终会格式化为`134-1234-5678`，且中间删除更改会自动补位。
+<p/>
+支持2个属性    
+- 1.格式化样式，例如:"344";    
+- 2.需要中间插入的字符，例如:" ";    
 
 ## Gradle
 ```groovy
@@ -43,4 +45,3 @@ License
 	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 	SOFTWARE.
-

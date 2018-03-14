@@ -5,8 +5,10 @@ import android.content.res.TypedArray;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
+import android.util.SparseArray;
 import android.widget.EditText;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,6 +69,8 @@ public class FormattedEditText extends EditText {
             setFormatStyle(formatStyle);
             String placeHolder = ta.getString(R.styleable.FormattedEditText_placeHolder);
             if (placeHolder != null) {
+                if (placeHolder.length() > 1)
+                    throw new IllegalArgumentException("PlaceHolder only can support one char");
                 setPlaceHolder(placeHolder.charAt(0));
             } else {
                 mPlaceHolder = DEFAULT_PLACE_HOLDER;

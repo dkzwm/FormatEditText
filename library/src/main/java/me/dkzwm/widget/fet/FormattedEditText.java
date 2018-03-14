@@ -36,7 +36,8 @@ public class FormattedEditText extends EditText {
         TextWatcher textWatcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                if (mPlaceHoldersPos == null || s.length() == 0 || s.length() - count == 0) {
+                if (!mHasBeenFormatted && (mPlaceHoldersPos == null
+                        || (s.length() > 0 && s.length() - count == 0))) {
                     sendBeforeTextChanged(s, start, count, after);
                 }
             }
@@ -54,6 +55,8 @@ public class FormattedEditText extends EditText {
             public void afterTextChanged(Editable s) {
                 if (mPlaceHoldersPos == null || s.length() == 0)
                     sendAfterTextChanged(s);
+                if (s.length() == 0 && mTextBuilder.length() != 0)
+                    mTextBuilder.setLength(0);
             }
         };
         super.addTextChangedListener(textWatcher);
@@ -194,10 +197,10 @@ public class FormattedEditText extends EditText {
                 }
             }
         }
+        mHasBeenFormatted = true;
         final CharSequence text = mTextBuilder.toString();
         if (before > 0) {
             sendBeforeTextChanged(originText, start, before, 0);
-            mHasBeenFormatted = true;
             setText(text);
             mHasBeenFormatted = false;
             if (start > text.length()) {
@@ -210,7 +213,6 @@ public class FormattedEditText extends EditText {
             sendAfterTextChanged(getText());
         } else {
             sendBeforeTextChanged(originText, start, 0, realCount);
-            mHasBeenFormatted = true;
             setText(text);
             mHasBeenFormatted = false;
             setSelection(start + realCount);

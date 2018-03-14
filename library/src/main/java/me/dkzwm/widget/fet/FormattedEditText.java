@@ -51,7 +51,7 @@ public class FormattedEditText extends EditText {
                     mIsFormatted = false;
                     sendOnTextChanged(s, start, before, count);
                 } else {
-                    formattedText(s, start, before, count);
+                    formatText(s, start, before, count);
                 }
             }
 
@@ -78,8 +78,7 @@ public class FormattedEditText extends EditText {
             mPlaceHolder = DEFAULT_PLACE_HOLDER;
         }
         if (getText().length() > 0) {
-            formattedText(getText().toString(), 0, 0, getText().length());
-            setSelection(getText().length());
+            formatText(getText().toString(), 0, 0, getText().length());
         }
     }
 
@@ -159,7 +158,7 @@ public class FormattedEditText extends EditText {
         }
     }
 
-    private void formattedText(final CharSequence s, int start, int before, int count) {
+    private void formatText(final CharSequence s, int start, int before, int count) {
         if (s.length() == 0)
             return;
         mTextBuilder.setLength(0);

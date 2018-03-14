@@ -18,7 +18,7 @@ import java.util.List;
 public class FormattedEditText extends EditText {
     private static final char DEFAULT_PLACE_HOLDER = ' ';
     private char mPlaceHolder;
-    private int[] mPlaceHoldersPosition;
+    private int[] mPlaceHoldersPos;
     private List<TextWatcher> mWatchers;
     private boolean mIsFormatted = false;
     private StringBuilder mTextBuilder = new StringBuilder();
@@ -36,14 +36,14 @@ public class FormattedEditText extends EditText {
         TextWatcher textWatcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                if (mIsFormatted || mPlaceHoldersPosition == null || s.length() == 0) {
+                if (mIsFormatted || mPlaceHoldersPos == null || s.length() == 0) {
                     sendBeforeTextChanged(s, start, count, after);
                 }
             }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (mPlaceHoldersPosition == null) {
+                if (mPlaceHoldersPos == null) {
                     sendOnTextChanged(s, start, before, count);
                     return;
                 }
@@ -57,7 +57,7 @@ public class FormattedEditText extends EditText {
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (mIsFormatted || mPlaceHoldersPosition == null || s.length() == 0)
+                if (mIsFormatted || mPlaceHoldersPos == null || s.length() == 0)
                     sendAfterTextChanged(s);
             }
         };
@@ -114,11 +114,11 @@ public class FormattedEditText extends EditText {
         if (style != null) {
             boolean isNumeric = isNumeric(style);
             if (isNumeric) {
-                mPlaceHoldersPosition = new int[style.length()];
-                mPlaceHoldersPosition[0] = Character.getNumericValue(style.charAt(0));
+                mPlaceHoldersPos = new int[style.length()];
+                mPlaceHoldersPos[0] = Character.getNumericValue(style.charAt(0));
                 for (int i = 1; i < style.length(); i++) {
                     int number = Character.getNumericValue(style.charAt(i));
-                    mPlaceHoldersPosition[i] = mPlaceHoldersPosition[i - 1] + 1 + number;
+                    mPlaceHoldersPos[i] = mPlaceHoldersPos[i - 1] + 1 + number;
                 }
             } else
                 throw new IllegalArgumentException("Format style must be numeric");
@@ -164,30 +164,36 @@ public class FormattedEditText extends EditText {
             return;
         mTextBuilder.setLength(0);
         int nowPosition = 0;
+        int realCount = 0;
         if (count > 0) {
-            int realCount = 0;
             for (int i = 0; i < count; i++) {
+                for (int j = nowPosition; j < mPlaceHoldersPos.length; j++) {
+                    if (mPlaceHoldersPos[j] > start + realCount)
+                        break;
+                    if (mPlaceHoldersPos[j] == start + realCount) {
+                        realCount++;
+                        nowPosition++;
+                    }
+                }
                 if (s.charAt(start + i) != mPlaceHolder)
                     realCount++;
             }
-            count = realCount;
         }
+        nowPosition = 0;
         final int originLength = s.length();
-        int appendHolderCount = 0;
         for (int i = 0; i < originLength; i++) {
-            if (s.charAt(i) == mPlaceHolder)
+            if (s.charAt(i) == mPlaceHolder) {
                 continue;
-            if (nowPosition >= mPlaceHoldersPosition.length) {
+            }
+            if (nowPosition >= mPlaceHoldersPos.length) {
                 mTextBuilder.append(s.charAt(i));
             } else {
-                if (mTextBuilder.length() < mPlaceHoldersPosition[nowPosition]) {
+                if (mTextBuilder.length() < mPlaceHoldersPos[nowPosition]) {
                     mTextBuilder.append(s.charAt(i));
-                } else if (mTextBuilder.length() == mPlaceHoldersPosition[nowPosition]) {
+                } else if (mTextBuilder.length() == mPlaceHoldersPos[nowPosition]) {
                     mTextBuilder.append(mPlaceHolder);
-                    if (i >= start) {
-                        appendHolderCount++;
-                    }
                     mTextBuilder.append(s.charAt(i));
+                    nowPosition++;
                 } else {
                     mTextBuilder.append(s.charAt(i));
                     nowPosition++;
@@ -203,7 +209,7 @@ public class FormattedEditText extends EditText {
                 setSelection(start);
         } else {
             setText(mTextBuilder.toString());
-            setSelection(start + count + appendHolderCount);
+            setSelection(start + realCount);
         }
     }
 }

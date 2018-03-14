@@ -5,8 +5,11 @@ FormatEditText可以用来当做号码格式化文本输入框使用，可以用
 例如:指定样式为`344`，插入字符为`-`，手动依次输入`13012345678`，那么最终会格式化为`134-1234-5678`，且中间删除更改会自动补位。
 <p/>
 支持2个属性    
-- 1.格式化样式，例如:"344";    
-- 2.需要中间插入的字符，例如:" ";    
+- 1.格式化样式，例如:`344`;    
+- 2.需要中间插入的字符，例如:`-`;    
+
+## 演示程序
+下载 [Demo.apk](https://raw.githubusercontent.com/dkzwm/FormatEditText/master/demo/demo.apk)    
 
 ## Gradle
 ```groovy
@@ -16,11 +19,11 @@ repositories {
 }
 
 dependencies {  
-    compile 'com.github.dkzwm:FormatEditText:0.0.2’
+    compile 'com.github.dkzwm:FormatEditText:0.0.3’
 }
 ``` 
 
-## Snapshot
+## 快照
 <img src='snapshot.gif'></img>
 
 License

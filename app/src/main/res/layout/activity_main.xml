@@ -10,25 +10,30 @@
     <me.dkzwm.widget.fet.FormattedEditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="number"
+        android:inputType="phone"
         android:maxLines="13"
-        android:text="18099999999"
+        android:padding="12dp"
+        android:text="123456789"
         android:textColor="@color/colorPrimary"
         android:textSize="16sp"
-        app:formatStyle="344"/>
+        app:formatStyle="12345"
+        app:placeHolder=">"/>
 
     <me.dkzwm.widget.fet.FormattedEditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="12345123456123456712345678"
+        android:inputType="phone"
+        android:padding="12dp"
         android:textColor="@color/colorPrimary"
         android:textSize="16sp"
-        app:formatStyle="5678"
+        app:formatStyle="5555"
         app:placeHolder="-"/>
 
     <me.dkzwm.widget.fet.FormattedEditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:inputType="phone"
+        android:padding="12dp"
         android:textColor="@color/colorPrimary"
         android:textSize="16sp"
         app:formatStyle="344"

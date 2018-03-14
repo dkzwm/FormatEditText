@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {  
-    compile 'com.github.dkzwm:FormatEditText:0.0.3’
+    compile 'com.github.dkzwm:FormatEditText:0.0.4’
 }
 ``` 
 

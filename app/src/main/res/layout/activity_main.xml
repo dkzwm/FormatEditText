@@ -8,6 +8,7 @@
               tools:context=".MainActivity">
 
     <me.dkzwm.widget.fet.FormattedEditText
+        android:id="@+id/formattedEditText_now"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:inputType="phone"
@@ -16,26 +17,34 @@
         android:text="123456789"
         android:textColor="@color/colorPrimary"
         android:textSize="16sp"
-        app:formatStyle="12345"
-        app:placeHolder=">"/>
-
-    <me.dkzwm.widget.fet.FormattedEditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="phone"
-        android:padding="12dp"
-        android:textColor="@color/colorPrimary"
-        android:textSize="16sp"
-        app:formatStyle="5555"
+        app:formatStyle="12345678"
         app:placeHolder="-"/>
 
-    <me.dkzwm.widget.fet.FormattedEditText
+    <EditText
+        android:id="@+id/editText_original"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="phone"
-        android:padding="12dp"
-        android:textColor="@color/colorPrimary"
-        android:textSize="16sp"
-        app:formatStyle="344"
-        app:placeHolder="-"/>
+        android:textColor="@android:color/black"
+        android:textSize="18sp"/>
+
+    <Button
+        android:id="@+id/button_clear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Clear"
+        android:textColor="@android:color/holo_red_dark"
+        android:textSize="16sp"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/textView_logs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingExtra="3dp"
+            android:textColor="@android:color/black"
+            android:textSize="16sp"/>
+    </ScrollView>
 </LinearLayout>

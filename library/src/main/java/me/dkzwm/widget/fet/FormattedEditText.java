@@ -20,7 +20,7 @@ public class FormattedEditText extends EditText {
     private char mPlaceHolder;
     private int[] mPlaceHoldersPos;
     private List<TextWatcher> mWatchers;
-    private boolean mIsFormatted = false;
+    private boolean mHasBeenFormatted = false;
     private StringBuilder mTextBuilder = new StringBuilder();
 
     public FormattedEditText(Context context) {
@@ -36,28 +36,23 @@ public class FormattedEditText extends EditText {
         TextWatcher textWatcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                if (mIsFormatted || mPlaceHoldersPos == null || s.length() == 0) {
+                if (mPlaceHoldersPos == null || s.length() == 0 || s.length() - count == 0) {
                     sendBeforeTextChanged(s, start, count, after);
                 }
             }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (mPlaceHoldersPos == null) {
+                if (mPlaceHoldersPos == null || s.length() == 0) {
                     sendOnTextChanged(s, start, before, count);
                     return;
                 }
-                if (mIsFormatted || s.length() == 0) {
-                    mIsFormatted = false;
-                    sendOnTextChanged(s, start, before, count);
-                } else {
-                    formatText(s, start, before, count);
-                }
+                if (!mHasBeenFormatted) formatText(s, start, before, count);
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (mIsFormatted || mPlaceHoldersPos == null || s.length() == 0)
+                if (mPlaceHoldersPos == null || s.length() == 0)
                     sendAfterTextChanged(s);
             }
         };
@@ -128,12 +123,12 @@ public class FormattedEditText extends EditText {
         mPlaceHolder = holder;
     }
 
-    private void sendBeforeTextChanged(CharSequence text, int start, int before, int after) {
+    private void sendBeforeTextChanged(CharSequence s, int start, int count, int after) {
         if (mWatchers != null) {
             final List<TextWatcher> list = mWatchers;
             final int size = list.size();
             for (int i = 0; i < size; i++) {
-                list.get(i).beforeTextChanged(text, start, before, after);
+                list.get(i).beforeTextChanged(s, start, count, after);
             }
         }
     }
@@ -159,8 +154,8 @@ public class FormattedEditText extends EditText {
     }
 
     private void formatText(final CharSequence s, int start, int before, int count) {
-        if (s.length() == 0)
-            return;
+        final int lastLength = mTextBuilder.length();
+        final CharSequence originText = mTextBuilder.toString();
         mTextBuilder.setLength(0);
         int nowPosition = 0;
         int realCount = 0;
@@ -199,16 +194,28 @@ public class FormattedEditText extends EditText {
                 }
             }
         }
-        mIsFormatted = true;
+        final CharSequence text = mTextBuilder.toString();
         if (before > 0) {
-            setText(mTextBuilder.toString());
-            if (start > mTextBuilder.length())
-                setSelection(mTextBuilder.length());
-            else
+            sendBeforeTextChanged(originText, start, before, 0);
+            mHasBeenFormatted = true;
+            setText(text);
+            mHasBeenFormatted = false;
+            if (start > text.length()) {
+                setSelection(text.length());
+                sendOnTextChanged(text, start, lastLength - text.length(), 0);
+            } else {
                 setSelection(start);
+                sendOnTextChanged(text, start, before, 0);
+            }
+            sendAfterTextChanged(getText());
         } else {
-            setText(mTextBuilder.toString());
+            sendBeforeTextChanged(originText, start, 0, realCount);
+            mHasBeenFormatted = true;
+            setText(text);
+            mHasBeenFormatted = false;
             setSelection(start + realCount);
+            sendOnTextChanged(text, start, before, realCount);
+            sendAfterTextChanged(getText());
         }
     }
 }

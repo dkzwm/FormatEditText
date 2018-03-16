@@ -236,8 +236,8 @@ public class FormattedEditText extends EditText {
         final String lastText = mTextBuilder.toString();
         int startPos = mPlaceHoldersPos.length - 1;
         for (int i = 0; i < mPlaceHoldersPos.length; i++) {
-            if (start <= mPlaceHoldersPos[i]) {
-                startPos = i - 1;
+            if (start - 1 <= mPlaceHoldersPos[i]) {
+                startPos = i;
                 break;
             }
         }

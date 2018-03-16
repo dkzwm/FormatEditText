@@ -1,17 +1,20 @@
 # FormatEditText
 ## [English](https://github.com/dkzwm/FormatEditText/blob/master/README.md) | 中文
-<p>
-FormatEditText可以用来当做号码格式化文本输入框使用，可以用来作为格式化手机号码、格式化身份证号码、格式化银行卡号码等。    
-例如:指定样式为`344`，插入字符为`-`，手动依次输入`13012345678`，那么最终会格式化为`134-1234-5678`，且中间删除更改会自动补位。
-<p/>
-支持2个属性    
-- 1.格式化样式，例如:`344`;    
-- 2.需要中间插入的字符，例如:`-`;    
+
+FormatEditText可以用来当做号码格式化文本输入框使用, 可以用来作为格式化手机号码、格式化身份证号码、格式化银行卡号码等.    
+例如:指定模式为`MODE_SIMPLE`, 样式为`344`, 占位符为`-`, 手动依次输入`13012345678`, 那么最终会格式化为`130-1234-5678`, 且中间删除更改会自动补位.
+例如:指定样式为`MODE_COMPLEX`, 样式为`***-****-****`, 标记符为`*`, 手动依次输入`13012345678`, 那么最终会格式化为`130-1234-5678`, 且中间删除更改会自动补位.
+## 特性:
+ - 支持配置格式化样式
+ - 支持粘贴且光标自动跟随
+ - 自动填充删除占位符
 
 ## 演示程序
 下载 [Demo.apk](https://raw.githubusercontent.com/dkzwm/FormatEditText/master/demo/demo.apk)    
-
-## Gradle
+## 快照
+<img src='snapshot.gif'></img>
+## 使用   
+#### Gradle
 ```groovy
 repositories {  
     ...
@@ -19,15 +22,49 @@ repositories {
 }
 
 dependencies {  
-    compile 'com.github.dkzwm:FormatEditText:0.0.4’
+    compile 'com.github.dkzwm:FormatEditText:0.0.5'
 }
 ``` 
+#### 在Xml中配置
+```
+//组合模式
+<me.dkzwm.widget.fet.FormattedEditText
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:fet_formatStyle="+(**)-***-****-****"
+    app:fet_mark="*"
+    app:fet_mode="mode_complex"/>
 
-## 快照
-<img src='snapshot.gif'></img>
+//简单模式
+<me.dkzwm.widget.fet.FormattedEditText
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:fet_formatStyle="344"
+    app:fet_mode="mode_simple"
+    app:fet_placeholder=" "/>
+```
+####  Java代码配置
+```
+//简单模式
+FormattedEditText editText = findViewById(R.id.formattedEditText);
+editText.setMode(FormattedEditText.MODE_SIMPLE);
+editText.setFormatStyle("344");
+editText.setPlaceholder(" ");（输入13012345678，格式化后为:130 1234 5678）
+//组合模式
+editText.setMode(FormattedEditText.MODE_SIMPLE);
+editText.setMark("*");
+editText.setFormatStyle("+(**)-***-****-****");（输入8613012345678，格式化后为:+(86)-130-1234-5678）
+```
+#### Xml属性 
+|名称|类型|描述|
+|:---:|:---:|:---:|
+|fet_mode|enum|指定模式，支持`MODE_SIMPLE`（简单模式）和`MODE_COMPLEX`(组合模式)|
+|fet_formatStyle|string|指定格式化样式，当`fet_mode`为`MODE_SIMPLE`时，格式只能是纯数字, `fet_mode`为`MODE_COMPLEX`时，格式为任意格式且需要指定`fet_mark`属性，如果不指定那么默认为`*`|
+|fet_mark|string|指定标记符，仅当`fet_mode`为`MODE_COMPLEX`时需要设置，且长度必须为1（默认:`*`）|
+|fet_placeholder|string|指定占位符，仅当`fet_mode`为`MODE_SIMPLE`时需要设置，且长度必须为1（默认:` `）|
 
-License
---------
+##License
+	--------
 
     	Copyright (c) 2017 dkzwm
 

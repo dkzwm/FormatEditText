@@ -2,13 +2,16 @@ package me.dkzwm.widget.fet;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
-import android.util.SparseArray;
 import android.widget.EditText;
 
-import java.security.InvalidParameterException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,9 +21,15 @@ import java.util.List;
  * @author dkzwm
  */
 public class FormattedEditText extends EditText {
-    private static final char DEFAULT_PLACE_HOLDER = ' ';
-    private char mPlaceHolder;
+    public static final int MODE_SIMPLE = 0;
+    public static final int MODE_COMPLEX = 1;
+    private static final String DEFAULT_PLACE_HOLDER = " ";
+    private static final String DEFAULT_MARK = "*";
     private int[] mPlaceHoldersPos;
+    private String[] mPlaceHolders;
+    private String mMark;
+    @Mode
+    private int mMode = MODE_SIMPLE;
     private List<TextWatcher> mWatchers;
     private boolean mHasBeenFormatted = false;
     private StringBuilder mTextBuilder = new StringBuilder();
@@ -65,19 +74,24 @@ public class FormattedEditText extends EditText {
         if (attrs != null) {
             TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.FormattedEditText,
                     defStyleAttr, 0);
-            String formatStyle = ta.getString(R.styleable.FormattedEditText_formatStyle);
+            mMark = ta.getString(R.styleable.FormattedEditText_fet_mark);
+            @Mode
+            int mode = ta.getInt(R.styleable.FormattedEditText_fet_mode, MODE_SIMPLE);
+            setMode(mode);
+            String formatStyle = ta.getString(R.styleable.FormattedEditText_fet_formatStyle);
             setFormatStyle(formatStyle);
-            String placeHolder = ta.getString(R.styleable.FormattedEditText_placeHolder);
-            if (placeHolder != null) {
-                if (placeHolder.length() > 1)
-                    throw new IllegalArgumentException("PlaceHolder only can support one char");
-                setPlaceHolder(placeHolder.charAt(0));
-            } else {
-                mPlaceHolder = DEFAULT_PLACE_HOLDER;
+            if (mMode == MODE_SIMPLE) {
+                String placeHolder = ta.getString(R.styleable.FormattedEditText_fet_placeholder);
+                if (placeHolder != null) {
+                    if (placeHolder.length() > 1)
+                        throw new IllegalArgumentException("PlaceHolder only can support one char");
+                    setPlaceholder(placeHolder);
+                } else {
+                    mPlaceHolders = new String[1];
+                    mPlaceHolders[0] = DEFAULT_PLACE_HOLDER;
+                }
             }
             ta.recycle();
-        } else {
-            mPlaceHolder = DEFAULT_PLACE_HOLDER;
         }
         if (getText().length() > 0) {
             formatText(getText().toString(), 0, 0, getText().length());
@@ -113,21 +127,70 @@ public class FormattedEditText extends EditText {
 
     public void setFormatStyle(String style) {
         if (style != null) {
-            boolean isNumeric = isNumeric(style);
-            if (isNumeric) {
-                mPlaceHoldersPos = new int[style.length()];
-                mPlaceHoldersPos[0] = Character.getNumericValue(style.charAt(0));
-                for (int i = 1; i < style.length(); i++) {
-                    int number = Character.getNumericValue(style.charAt(i));
-                    mPlaceHoldersPos[i] = mPlaceHoldersPos[i - 1] + 1 + number;
+            if (mMode == MODE_SIMPLE) {
+                boolean isNumeric = isNumeric(style);
+                if (isNumeric) {
+                    mPlaceHoldersPos = new int[style.length()];
+                    mPlaceHoldersPos[0] = Character.getNumericValue(style.charAt(0));
+                    for (int i = 1; i < style.length(); i++) {
+                        int number = Character.getNumericValue(style.charAt(i));
+                        mPlaceHoldersPos[i] = mPlaceHoldersPos[i - 1] + 1 + number;
+                    }
+                } else
+                    throw new IllegalArgumentException("Format style must be numeric");
+            } else {
+                if (!style.contains(mMark))
+                    throw new IllegalArgumentException("Format style must be have Mark strings");
+                final String[] tempHolders = new String[style.length()];
+                final int[] tempHoldersPos = new int[style.length()];
+                int realCount = 0;
+                for (int i = 0; i < style.length(); i++) {
+                    final String sub = style.substring(i, i + 1);
+                    if (!sub.equals(mMark)) {
+                        tempHolders[realCount] = sub;
+                        tempHoldersPos[realCount] = i;
+                        realCount++;
+                    }
                 }
-            } else
-                throw new IllegalArgumentException("Format style must be numeric");
+                mPlaceHoldersPos = new int[realCount];
+                System.arraycopy(tempHoldersPos, 0, mPlaceHoldersPos, 0, realCount);
+                mPlaceHolders = new String[realCount];
+                System.arraycopy(tempHolders, 0, mPlaceHolders, 0, realCount);
+            }
+        } else {
+            mPlaceHolders = null;
+            mPlaceHoldersPos = null;
         }
     }
 
-    public void setPlaceHolder(char holder) {
-        mPlaceHolder = holder;
+    public void setMode(@Mode int mode) {
+        if (mMode != mode) {
+            String originalText = getText().toString();
+            mMode = mode;
+            if (mMode == MODE_COMPLEX && TextUtils.isEmpty(mMark))
+                mMark = DEFAULT_MARK;
+            if (!TextUtils.isEmpty(originalText)) {
+                setText("");
+                setText(originalText);
+            }
+        }
+    }
+
+    public void setMark(@NonNull String mark) {
+        if (mark.length() > 1)
+            throw new IllegalArgumentException("Mark only supports length one strings");
+        mMark = mark;
+    }
+
+    public void setPlaceholder(@NonNull String holder) {
+        if (mMode == MODE_SIMPLE) {
+            if (holder.length() > 1)
+                throw new IllegalArgumentException("Placeholder only supports length one strings");
+            mPlaceHolders = new String[1];
+            mPlaceHolders[0] = holder;
+        } else {
+            throw new IllegalArgumentException("Placeholder only supports mode is MODE_SIMPLE");
+        }
     }
 
     private void sendBeforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -161,67 +224,131 @@ public class FormattedEditText extends EditText {
     }
 
     private void formatText(final CharSequence s, int start, int before, int count) {
-        final int lastLength = mTextBuilder.length();
-        final CharSequence originText = mTextBuilder.toString();
-        mTextBuilder.setLength(0);
-        int nowPosition = 0;
-        int realCount = 0;
-        if (count > 0) {
-            for (int i = 0; i < count; i++) {
-                for (int j = nowPosition; j < mPlaceHoldersPos.length; j++) {
-                    if (mPlaceHoldersPos[j] > start + realCount)
-                        break;
-                    if (mPlaceHoldersPos[j] == start + realCount) {
-                        realCount++;
-                        nowPosition++;
-                    }
-                }
-                if (s.charAt(start + i) != mPlaceHolder)
-                    realCount++;
+        if (before > 0) {
+            formatTextWhenDelete(s, start);
+        } else if (count > 0) {
+            formatTextWhenAppend(s, start, count);
+        }
+    }
+
+
+    private void formatTextWhenDelete(final CharSequence s, int start) {
+        final String lastText = mTextBuilder.toString();
+        int startPos = mPlaceHoldersPos.length - 1;
+        for (int i = 0; i < mPlaceHoldersPos.length; i++) {
+            if (start <= mPlaceHoldersPos[i]) {
+                startPos = i - 1;
+                break;
             }
         }
-        nowPosition = 0;
-        final int originLength = s.length();
-        for (int i = 0; i < originLength; i++) {
-            if (s.charAt(i) == mPlaceHolder) {
+        if (startPos < 0) startPos = 0;
+        if (start < s.length()) {
+            mTextBuilder.delete(start, mTextBuilder.length());
+            formatTextNoCursor(s.toString(), start, 0, startPos);
+        } else {
+            mTextBuilder.delete(start, mTextBuilder.length());
+        }
+        final int length = mTextBuilder.length();
+        for (int i = length; i > 0; i--) {
+            final String sub = mTextBuilder.substring(i - 1, i);
+            if (((mMode == MODE_COMPLEX && sub.equals(mPlaceHolders[startPos]) ||
+                    (mMode == MODE_SIMPLE && sub.equals(mPlaceHolders[0]))))
+                    && i - 1 == mPlaceHoldersPos[startPos]) {
+                mTextBuilder.delete(i - 1, i);
+                startPos--;
                 continue;
             }
-            if (nowPosition >= mPlaceHoldersPos.length) {
-                mTextBuilder.append(s.charAt(i));
-            } else {
-                if (mTextBuilder.length() < mPlaceHoldersPos[nowPosition]) {
-                    mTextBuilder.append(s.charAt(i));
-                } else if (mTextBuilder.length() == mPlaceHoldersPos[nowPosition]) {
-                    mTextBuilder.append(mPlaceHolder);
-                    mTextBuilder.append(s.charAt(i));
-                    nowPosition++;
-                } else {
-                    mTextBuilder.append(s.charAt(i));
-                    nowPosition++;
-                }
-            }
+            break;
         }
         mHasBeenFormatted = true;
         final CharSequence text = mTextBuilder.toString();
-        if (before > 0) {
-            sendBeforeTextChanged(originText, start, before, 0);
-            setText(text);
-            mHasBeenFormatted = false;
-            if (start > text.length()) {
-                setSelection(text.length());
-                sendOnTextChanged(text, start, lastLength - text.length(), 0);
-            } else {
-                setSelection(start);
-                sendOnTextChanged(text, start, before, 0);
+        final int realCount = lastText.length() - text.length();
+        sendBeforeTextChanged(lastText, start, realCount, 0);
+        setText(text);
+        mHasBeenFormatted = false;
+        if (start > text.length())
+            setSelection(text.length());
+        else
+            setSelection(start);
+        sendOnTextChanged(text, start, realCount, 0);
+        sendAfterTextChanged(getText());
+    }
+
+    private void formatTextWhenAppend(final CharSequence s, int start, int count) {
+        final String lastText = mTextBuilder.toString();
+        int startPos = 0;
+        for (int i = 0; i < mPlaceHoldersPos.length; i++) {
+            if (start <= mPlaceHoldersPos[i]) {
+                startPos = i;
+                break;
             }
-            sendAfterTextChanged(getText());
-        } else {
-            sendBeforeTextChanged(originText, start, 0, realCount);
-            setText(text);
-            mHasBeenFormatted = false;
-            setSelection(start + realCount);
-            sendOnTextChanged(text, start, before, realCount);
-            sendAfterTextChanged(getText());
         }
+        int tailLength = mTextBuilder.length() - start;
+        if (tailLength > 0) {
+            mTextBuilder.delete(start, mTextBuilder.length());
+        }
+        int realPos = formatTextNoCursor(s.toString(), start, count, startPos);
+        mHasBeenFormatted = true;
+        final CharSequence text = mTextBuilder.toString();
+        sendBeforeTextChanged(lastText, start, 0, realPos - start);
+        setText(text);
+        mHasBeenFormatted = false;
+        setSelection(realPos);
+        sendOnTextChanged(text, start, 0, realPos - start);
+        sendAfterTextChanged(getText());
+    }
+
+    private int formatTextNoCursor(final String text, int start, int count, int position) {
+        final int length = text.length();
+        int afterAppendStart = 0;
+        int lastI = -1;
+        for (int i = start; i < length; i++) {
+            boolean found = false;
+            final String sub = text.substring(i, i + 1);
+            for (String placeholder : mPlaceHolders) {
+                if (sub.equals(placeholder)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                if (count > 0 && i >= start && count > 0 && lastI != i) {
+                    count--;
+                    if (count == 0) {
+                        afterAppendStart = mTextBuilder.length();
+                    }
+                }
+                lastI = i;
+                continue;
+            }
+            if (position >= mPlaceHoldersPos.length || mTextBuilder.length() !=
+                    mPlaceHoldersPos[position]) {
+                mTextBuilder.append(sub);
+                if (count > 0 && i >= start && count > 0 && lastI != i) {
+                    count--;
+                    if (count == 0) {
+                        afterAppendStart = mTextBuilder.length();
+                    }
+                }
+                if (position < mPlaceHoldersPos.length && mTextBuilder.length() >
+                        mPlaceHoldersPos[position])
+                    position++;
+            } else {
+                if (mMode == MODE_SIMPLE) {
+                    mTextBuilder.append(mPlaceHolders[0]);
+                } else {
+                    mTextBuilder.append(mPlaceHolders[position]);
+                }
+                position++;
+                i--;
+            }
+            lastI = i;
+        }
+        return afterAppendStart;
+    }
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({MODE_SIMPLE, MODE_COMPLEX})
+    @interface Mode {
     }
 }

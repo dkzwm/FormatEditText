@@ -1,7 +1,11 @@
 <resources>
-
     <declare-styleable name="FormattedEditText">
-        <attr name="formatStyle" format="string"/>
-        <attr name="placeHolder" format="string"/>
+        <attr name="fet_mode" format="enum">
+            <enum name="mode_simple" value="0"/>
+            <enum name="mode_complex" value="1"/>
+        </attr>
+        <attr name="fet_formatStyle" format="string"/>
+        <attr name="fet_placeholder" format="string"/>
+        <attr name="fet_mark" format="string"/>
     </declare-styleable>
 </resources>

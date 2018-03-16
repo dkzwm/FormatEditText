@@ -20,6 +20,6 @@ android {
 }
 
 dependencies {
-    compile project(':library')
-    compile 'com.android.support:appcompat-v7:27.1.0'
+    implementation project(':library')
+    implementation 'com.android.support:appcompat-v7:27.1.0'
 }

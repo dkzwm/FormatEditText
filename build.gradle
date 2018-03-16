@@ -3,7 +3,6 @@ buildscript {
     repositories {
         jcenter()
         google()
-        maven { url 'https://jitpack.io' }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.0.1'
@@ -17,7 +16,7 @@ allprojects {
     repositories {
         jcenter()
         google()
-        maven { url 'https://jitpack.io' }
+        maven { url "https://jitpack.io" }
     }
 }
 
@@ -27,8 +26,8 @@ ext {
             buildToolsVersion: "27.0.3",
             minSdkVersion    : 9,
             targetSdkVersion : 27,
-            versionCode      : 4,
-            versionName      : "0.0.4"
+            versionCode      : 5,
+            versionName      : "0.0.5"
     ]
 }
 

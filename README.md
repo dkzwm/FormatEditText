@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {  
-    compile 'com.github.dkzwm:FormatEditText:0.0.5.1'
+    compile 'com.github.dkzwm:FormatEditText:0.0.5.2'
 }
 ``` 
 #### 在Xml中配置

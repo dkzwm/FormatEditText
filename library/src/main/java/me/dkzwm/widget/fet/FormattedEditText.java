@@ -234,31 +234,46 @@ public class FormattedEditText extends EditText {
 
     private void formatTextWhenDelete(final CharSequence s, int start) {
         final String lastText = mTextBuilder.toString();
-        int startPos = mPlaceHoldersPos.length - 1;
-        for (int i = 0; i < mPlaceHoldersPos.length; i++) {
-            if (start - 1 <= mPlaceHoldersPos[i]) {
-                startPos = i;
+        if (start < s.length()) {
+            int startPos = mPlaceHoldersPos.length - 1;
+            for (int i = 0; i < mPlaceHoldersPos.length; i++) {
+                if (start - 1 <= mPlaceHoldersPos[i]) {
+                    startPos = i - 1;
+                    break;
+                }
+            }
+            if (startPos < 0) {
+                mTextBuilder.delete(0, mTextBuilder.length());
+                formatTextNoCursor(s.toString(), 0, 0, 0);
+            } else {
+                mTextBuilder.delete(mPlaceHoldersPos[startPos], mTextBuilder.length());
+                formatTextNoCursor(s.toString(), mPlaceHoldersPos[startPos], 0, startPos);
+            }
+            outerLoop:
+            for (int i = start; i > 0; i--) {
+                final String sub = mTextBuilder.substring(i - 1, i);
+                for (String placeholder : mPlaceHolders) {
+                    if (sub.equals(placeholder)) {
+                        start--;
+                        continue outerLoop;
+                    }
+                }
                 break;
             }
-        }
-        if (startPos < 0) startPos = 0;
-        if (start < s.length()) {
-            mTextBuilder.delete(start, mTextBuilder.length());
-            formatTextNoCursor(s.toString(), start, 0, startPos);
         } else {
             mTextBuilder.delete(start, mTextBuilder.length());
-        }
-        final int length = mTextBuilder.length();
-        for (int i = length; i > 0; i--) {
-            final String sub = mTextBuilder.substring(i - 1, i);
-            if (((mMode == MODE_COMPLEX && sub.equals(mPlaceHolders[startPos]) ||
-                    (mMode == MODE_SIMPLE && sub.equals(mPlaceHolders[0]))))
-                    && i - 1 == mPlaceHoldersPos[startPos]) {
-                mTextBuilder.delete(i - 1, i);
-                startPos--;
-                continue;
+            final int length = mTextBuilder.length();
+            outerLoop:
+            for (int i = length; i > 0; i--) {
+                final String sub = mTextBuilder.substring(i - 1, i);
+                for (String placeholder : mPlaceHolders) {
+                    if (sub.equals(placeholder)) {
+                        mTextBuilder.delete(i - 1, i);
+                        continue outerLoop;
+                    }
+                }
+                break;
             }
-            break;
         }
         mHasBeenFormatted = true;
         final CharSequence text = mTextBuilder.toString();

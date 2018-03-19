@@ -25,8 +25,8 @@ public class FormattedEditText extends EditText {
     public static final int MODE_COMPLEX = 1;
     private static final String DEFAULT_PLACE_HOLDER = " ";
     private static final String DEFAULT_MARK = "*";
-    private int[] mPlaceHoldersPos;
-    private String[] mPlaceHolders;
+    private int[] mPlaceholdersPos;
+    private String[] mPlaceholders;
     private String mMark;
     @Mode
     private int mMode = MODE_SIMPLE;
@@ -35,7 +35,7 @@ public class FormattedEditText extends EditText {
     private StringBuilder mTextBuilder = new StringBuilder();
 
     public FormattedEditText(Context context) {
-        this(context, null, android.R.attr.editTextStyle);
+        this(context, null);
     }
 
     public FormattedEditText(Context context, AttributeSet attrs) {
@@ -47,7 +47,7 @@ public class FormattedEditText extends EditText {
         TextWatcher textWatcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                if (!mHasBeenFormatted && (mPlaceHoldersPos == null
+                if (!mHasBeenFormatted && (mPlaceholdersPos == null
                         || (s.length() > 0 && s.length() - count == 0))) {
                     sendBeforeTextChanged(s, start, count, after);
                 }
@@ -55,7 +55,7 @@ public class FormattedEditText extends EditText {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (mPlaceHoldersPos == null || s.length() == 0) {
+                if (mPlaceholdersPos == null || s.length() == 0) {
                     sendOnTextChanged(s, start, before, count);
                     return;
                 }
@@ -64,7 +64,7 @@ public class FormattedEditText extends EditText {
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (mPlaceHoldersPos == null || s.length() == 0)
+                if (mPlaceholdersPos == null || s.length() == 0)
                     sendAfterTextChanged(s);
                 if (s.length() == 0 && mTextBuilder.length() != 0)
                     mTextBuilder.setLength(0);
@@ -84,11 +84,11 @@ public class FormattedEditText extends EditText {
                 String placeHolder = ta.getString(R.styleable.FormattedEditText_fet_placeholder);
                 if (placeHolder != null) {
                     if (placeHolder.length() > 1)
-                        throw new IllegalArgumentException("PlaceHolder only can support one char");
+                        throw new IllegalArgumentException("Placeholder only can support one char");
                     setPlaceholder(placeHolder);
                 } else {
-                    mPlaceHolders = new String[1];
-                    mPlaceHolders[0] = DEFAULT_PLACE_HOLDER;
+                    mPlaceholders = new String[1];
+                    mPlaceholders[0] = DEFAULT_PLACE_HOLDER;
                 }
             }
             ta.recycle();
@@ -130,11 +130,11 @@ public class FormattedEditText extends EditText {
             if (mMode == MODE_SIMPLE) {
                 boolean isNumeric = isNumeric(style);
                 if (isNumeric) {
-                    mPlaceHoldersPos = new int[style.length()];
-                    mPlaceHoldersPos[0] = Character.getNumericValue(style.charAt(0));
+                    mPlaceholdersPos = new int[style.length()];
+                    mPlaceholdersPos[0] = Character.getNumericValue(style.charAt(0));
                     for (int i = 1; i < style.length(); i++) {
                         int number = Character.getNumericValue(style.charAt(i));
-                        mPlaceHoldersPos[i] = mPlaceHoldersPos[i - 1] + 1 + number;
+                        mPlaceholdersPos[i] = mPlaceholdersPos[i - 1] + 1 + number;
                     }
                 } else
                     throw new IllegalArgumentException("Format style must be numeric");
@@ -152,14 +152,14 @@ public class FormattedEditText extends EditText {
                         realCount++;
                     }
                 }
-                mPlaceHoldersPos = new int[realCount];
-                System.arraycopy(tempHoldersPos, 0, mPlaceHoldersPos, 0, realCount);
-                mPlaceHolders = new String[realCount];
-                System.arraycopy(tempHolders, 0, mPlaceHolders, 0, realCount);
+                mPlaceholdersPos = new int[realCount];
+                System.arraycopy(tempHoldersPos, 0, mPlaceholdersPos, 0, realCount);
+                mPlaceholders = new String[realCount];
+                System.arraycopy(tempHolders, 0, mPlaceholders, 0, realCount);
             }
         } else {
-            mPlaceHolders = null;
-            mPlaceHoldersPos = null;
+            mPlaceholders = null;
+            mPlaceholdersPos = null;
         }
     }
 
@@ -186,8 +186,8 @@ public class FormattedEditText extends EditText {
         if (mMode == MODE_SIMPLE) {
             if (holder.length() > 1)
                 throw new IllegalArgumentException("Placeholder only supports length one strings");
-            mPlaceHolders = new String[1];
-            mPlaceHolders[0] = holder;
+            mPlaceholders = new String[1];
+            mPlaceholders[0] = holder;
         } else {
             throw new IllegalArgumentException("Placeholder only supports mode is MODE_SIMPLE");
         }
@@ -234,10 +234,11 @@ public class FormattedEditText extends EditText {
 
     private void formatTextWhenDelete(final CharSequence s, int start) {
         final String lastText = mTextBuilder.toString();
-        if (start < s.length()) {
-            int startPos = mPlaceHoldersPos.length - 1;
-            for (int i = 0; i < mPlaceHoldersPos.length; i++) {
-                if (start - 1 <= mPlaceHoldersPos[i]) {
+        final boolean deletedLast = start >= s.length();
+        if (!deletedLast) {
+            int startPos = mPlaceholdersPos.length - 1;
+            for (int i = 0; i < mPlaceholdersPos.length; i++) {
+                if (start - 1 <= mPlaceholdersPos[i]) {
                     startPos = i - 1;
                     break;
                 }
@@ -246,34 +247,23 @@ public class FormattedEditText extends EditText {
                 mTextBuilder.delete(0, mTextBuilder.length());
                 formatTextNoCursor(s.toString(), 0, 0, 0);
             } else {
-                mTextBuilder.delete(mPlaceHoldersPos[startPos], mTextBuilder.length());
-                formatTextNoCursor(s.toString(), mPlaceHoldersPos[startPos], 0, startPos);
-            }
-            outerLoop:
-            for (int i = start; i > 0; i--) {
-                final String sub = mTextBuilder.substring(i - 1, i);
-                for (String placeholder : mPlaceHolders) {
-                    if (sub.equals(placeholder)) {
-                        start--;
-                        continue outerLoop;
-                    }
-                }
-                break;
+                mTextBuilder.delete(mPlaceholdersPos[startPos], mTextBuilder.length());
+                formatTextNoCursor(s.toString(), mPlaceholdersPos[startPos], 0, startPos);
             }
         } else {
             mTextBuilder.delete(start, mTextBuilder.length());
-            final int length = mTextBuilder.length();
-            outerLoop:
-            for (int i = length; i > 0; i--) {
-                final String sub = mTextBuilder.substring(i - 1, i);
-                for (String placeholder : mPlaceHolders) {
-                    if (sub.equals(placeholder)) {
-                        mTextBuilder.delete(i - 1, i);
-                        continue outerLoop;
-                    }
+        }
+        outerLoop:
+        for (int i = start; i > 0; i--) {
+            final String sub = mTextBuilder.substring(i - 1, i);
+            for (String placeholder : mPlaceholders) {
+                if (sub.equals(placeholder)) {
+                    if (deletedLast) mTextBuilder.delete(i - 1, i);
+                    start--;
+                    continue outerLoop;
                 }
-                break;
             }
+            break;
         }
         mHasBeenFormatted = true;
         final CharSequence text = mTextBuilder.toString();
@@ -281,10 +271,7 @@ public class FormattedEditText extends EditText {
         sendBeforeTextChanged(lastText, start, realCount, 0);
         setText(text);
         mHasBeenFormatted = false;
-        if (start > text.length())
-            setSelection(text.length());
-        else
-            setSelection(start);
+        setSelection(start);
         sendOnTextChanged(text, start, realCount, 0);
         sendAfterTextChanged(getText());
     }
@@ -292,8 +279,8 @@ public class FormattedEditText extends EditText {
     private void formatTextWhenAppend(final CharSequence s, int start, int count) {
         final String lastText = mTextBuilder.toString();
         int startPos = 0;
-        for (int i = 0; i < mPlaceHoldersPos.length; i++) {
-            if (start <= mPlaceHoldersPos[i]) {
+        for (int i = 0; i < mPlaceholdersPos.length; i++) {
+            if (start <= mPlaceholdersPos[i]) {
                 startPos = i;
                 break;
             }
@@ -320,7 +307,7 @@ public class FormattedEditText extends EditText {
         for (int i = start; i < length; i++) {
             boolean found = false;
             final String sub = text.substring(i, i + 1);
-            for (String placeholder : mPlaceHolders) {
+            for (String placeholder : mPlaceholders) {
                 if (sub.equals(placeholder)) {
                     found = true;
                     break;
@@ -336,8 +323,8 @@ public class FormattedEditText extends EditText {
                 lastI = i;
                 continue;
             }
-            if (position >= mPlaceHoldersPos.length || mTextBuilder.length() !=
-                    mPlaceHoldersPos[position]) {
+            if (position >= mPlaceholdersPos.length || mTextBuilder.length() !=
+                    mPlaceholdersPos[position]) {
                 mTextBuilder.append(sub);
                 if (count > 0 && i >= start && count > 0 && lastI != i) {
                     count--;
@@ -345,14 +332,14 @@ public class FormattedEditText extends EditText {
                         afterAppendStart = mTextBuilder.length();
                     }
                 }
-                if (position < mPlaceHoldersPos.length && mTextBuilder.length() >
-                        mPlaceHoldersPos[position])
+                if (position < mPlaceholdersPos.length && mTextBuilder.length() >
+                        mPlaceholdersPos[position])
                     position++;
             } else {
                 if (mMode == MODE_SIMPLE) {
-                    mTextBuilder.append(mPlaceHolders[0]);
+                    mTextBuilder.append(mPlaceholders[0]);
                 } else {
-                    mTextBuilder.append(mPlaceHolders[position]);
+                    mTextBuilder.append(mPlaceholders[position]);
                 }
                 position++;
                 i--;

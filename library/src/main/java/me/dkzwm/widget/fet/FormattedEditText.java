@@ -253,9 +253,10 @@ public class FormattedEditText extends EditText {
         } else {
             mTextBuilder.delete(start, mTextBuilder.length());
         }
+        final String tempText = mTextBuilder.toString();
         outerLoop:
         for (int i = start; i > 0; i--) {
-            final String sub = mTextBuilder.substring(i - 1, i);
+            final String sub = tempText.substring(i - 1, i);
             for (String placeholder : mPlaceholders) {
                 if (sub.equals(placeholder)) {
                     if (deletedLast) mTextBuilder.delete(i - 1, i);
@@ -314,7 +315,7 @@ public class FormattedEditText extends EditText {
                 }
             }
             if (found) {
-                if (count > 0 && i >= start && count > 0 && lastI != i) {
+                if (count > 0 && i >= start && lastI != i) {
                     count--;
                     if (count == 0) {
                         afterAppendStart = mTextBuilder.length();
@@ -326,7 +327,7 @@ public class FormattedEditText extends EditText {
             if (position >= mPlaceholdersPos.length || mTextBuilder.length() !=
                     mPlaceholdersPos[position]) {
                 mTextBuilder.append(sub);
-                if (count > 0 && i >= start && count > 0 && lastI != i) {
+                if (count > 0 && i >= start && lastI != i) {
                     count--;
                     if (count == 0) {
                         afterAppendStart = mTextBuilder.length();

@@ -1,7 +1,9 @@
 package me.dkzwm.widget.fet;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.os.Build;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.text.Editable;
@@ -35,15 +37,27 @@ public class FormattedEditText extends EditText {
     private StringBuilder mTextBuilder = new StringBuilder();
 
     public FormattedEditText(Context context) {
-        this(context, null);
+        super(context);
+        init(context, null, 0);
     }
 
     public FormattedEditText(Context context, AttributeSet attrs) {
-        this(context, attrs, android.R.attr.editTextStyle);
+        super(context, attrs);
+        init(context, attrs, 0);
     }
 
     public FormattedEditText(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        init(context, attrs, defStyleAttr);
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public FormattedEditText(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
+        init(context, attrs, defStyleAttr);
+    }
+
+    private void init(Context context, AttributeSet attrs, int defStyleAttr) {
         TextWatcher textWatcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -96,15 +110,6 @@ public class FormattedEditText extends EditText {
         if (getText().length() > 0) {
             formatText(getText().toString(), 0, 0, getText().length());
         }
-    }
-
-    private static boolean isNumeric(String str) {
-        for (int i = str.length(); --i >= 0; ) {
-            if (!Character.isDigit(str.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
     }
 
     @Override
@@ -191,6 +196,15 @@ public class FormattedEditText extends EditText {
         } else {
             throw new IllegalArgumentException("Placeholder only supports mode is MODE_SIMPLE");
         }
+    }
+
+    private boolean isNumeric(String str) {
+        for (int i = str.length(); --i >= 0; ) {
+            if (!Character.isDigit(str.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void sendBeforeTextChanged(CharSequence s, int start, int count, int after) {

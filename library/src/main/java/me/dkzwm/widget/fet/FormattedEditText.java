@@ -3,6 +3,7 @@ package me.dkzwm.widget.fet;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
@@ -107,7 +108,7 @@ public class FormattedEditText extends EditText {
             }
             ta.recycle();
         }
-        if (getText().length() > 0) {
+        if (mPlaceholders != null && getText().length() > 0) {
             formatText(getText().toString(), 0, 0, getText().length());
         }
     }
@@ -123,10 +124,7 @@ public class FormattedEditText extends EditText {
     @Override
     public void removeTextChangedListener(TextWatcher watcher) {
         if (mWatchers != null) {
-            int i = mWatchers.indexOf(watcher);
-            if (i >= 0) {
-                mWatchers.remove(i);
-            }
+            mWatchers.remove(watcher);
         }
     }
 

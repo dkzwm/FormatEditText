@@ -1,41 +1,32 @@
-package me.dkzwm.widget.sample;
+package me.dkzwm.widget.sample
 
-import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.view.View;
-import android.widget.EditText;
-import android.widget.TextView;
-import me.dkzwm.widget.fet.FormattedEditText;
+import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.View
+import android.widget.EditText
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import me.dkzwm.widget.fet.FormattedEditText
 
 /**
  * Created by dkzwm on 2017/2/23.
  *
  * @author dkzwm
  */
-public class MainActivity extends AppCompatActivity {
-    private TextView mTextViewLogs;
+class MainActivity : AppCompatActivity() {
+    private lateinit var mTextViewLogs: TextView
 
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        mTextViewLogs = findViewById(R.id.textView_logs);
-        findViewById(R.id.button_clear)
-                .setOnClickListener(
-                        new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                mTextViewLogs.setText("");
-                            }
-                        });
-        EditText editText = findViewById(R.id.editText_original);
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        mTextViewLogs = findViewById(R.id.textView_logs)
+        findViewById<View>(R.id.button_clear)
+                .setOnClickListener { mTextViewLogs.text = "" }
+        val editText = findViewById<EditText>(R.id.editText_original)
         editText.addTextChangedListener(
-                new TextWatcher() {
-                    @Override
-                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                object : TextWatcher {
+                    override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
                         mTextViewLogs.append(
                                 "未格式化: beforeTextChanged    s:"
                                         + s
@@ -46,11 +37,10 @@ public class MainActivity extends AppCompatActivity {
                                         + count
                                         + "   after:"
                                         + after
-                                        + "\n");
+                                        + "\n")
                     }
 
-                    @Override
-                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
                         mTextViewLogs.append(
                                 "未格式化: onTextChanged    s:"
                                         + s
@@ -61,19 +51,17 @@ public class MainActivity extends AppCompatActivity {
                                         + before
                                         + "   count:"
                                         + count
-                                        + "\n");
+                                        + "\n")
                     }
 
-                    @Override
-                    public void afterTextChanged(Editable s) {
-                        mTextViewLogs.append("未格式化: afterTextChanged    s:" + s + "\n\n");
+                    override fun afterTextChanged(s: Editable) {
+                        mTextViewLogs.append("未格式化: afterTextChanged    s:$s\n\n")
                     }
-                });
-        final EditText editTextComplex = findViewById(R.id.formattedEditText_complex);
+                })
+        val editTextComplex = findViewById<EditText>(R.id.formattedEditText_complex)
         editTextComplex.addTextChangedListener(
-                new TextWatcher() {
-                    @Override
-                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                object : TextWatcher {
+                    override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
                         mTextViewLogs.append(
                                 "复杂格式化后: beforeTextChanged    s:"
                                         + s
@@ -84,11 +72,10 @@ public class MainActivity extends AppCompatActivity {
                                         + count
                                         + "   after:"
                                         + after
-                                        + "\n");
+                                        + "\n")
                     }
 
-                    @Override
-                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
                         mTextViewLogs.append(
                                 "复杂格式化后: onTextChanged    s:"
                                         + s
@@ -99,19 +86,17 @@ public class MainActivity extends AppCompatActivity {
                                         + before
                                         + "   count:"
                                         + count
-                                        + "\n");
+                                        + "\n")
                     }
 
-                    @Override
-                    public void afterTextChanged(Editable s) {
-                        mTextViewLogs.append("复杂格式化后: afterTextChanged    s:" + s + "\n\n");
+                    override fun afterTextChanged(s: Editable) {
+                        mTextViewLogs.append("复杂格式化后: afterTextChanged    s:$s\n\n")
                     }
-                });
-        FormattedEditText editTextSimple = findViewById(R.id.formattedEditText_simple);
+                })
+        val editTextSimple = findViewById<FormattedEditText>(R.id.formattedEditText_simple)
         editTextSimple.addTextChangedListener(
-                new TextWatcher() {
-                    @Override
-                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                object : TextWatcher {
+                    override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
                         mTextViewLogs.append(
                                 "简单格式化后: beforeTextChanged    s:"
                                         + s
@@ -122,11 +107,10 @@ public class MainActivity extends AppCompatActivity {
                                         + count
                                         + "   after:"
                                         + after
-                                        + "\n");
+                                        + "\n")
                     }
 
-                    @Override
-                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
                         mTextViewLogs.append(
                                 "简单格式化后: onTextChanged    s:"
                                         + s
@@ -137,13 +121,12 @@ public class MainActivity extends AppCompatActivity {
                                         + before
                                         + "   count:"
                                         + count
-                                        + "\n");
+                                        + "\n")
                     }
 
-                    @Override
-                    public void afterTextChanged(Editable s) {
-                        mTextViewLogs.append("简单格式化后: afterTextChanged    s:" + s + "\n\n");
+                    override fun afterTextChanged(s: Editable) {
+                        mTextViewLogs.append("简单格式化后: afterTextChanged    s:$s\n\n")
                     }
-                });
+                })
     }
 }

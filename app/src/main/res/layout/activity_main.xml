@@ -7,7 +7,7 @@
               android:orientation="vertical"
               tools:context=".MainActivity">
 
-    <me.dkzwm.widget.fet.FormatEditText
+    <me.dkzwm.widget.fet.FormattedEditText
         android:id="@+id/formattedEditText_complex"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -21,7 +21,7 @@
         app:fet_mark="*"
         app:fet_mode="mode_complex"/>
 
-    <me.dkzwm.widget.fet.FormatEditText
+    <me.dkzwm.widget.fet.FormattedEditText
         android:id="@+id/formattedEditText_simple"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

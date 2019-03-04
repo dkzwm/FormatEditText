@@ -8,7 +8,7 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
-import me.dkzwm.widget.fet.FormatEditText;
+import me.dkzwm.widget.fet.FormattedEditText;
 
 /**
  * Created by dkzwm on 2017/2/23.
@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
                         mTextViewLogs.append("复杂格式化后: afterTextChanged    s:" + s + "\n\n");
                     }
                 });
-        FormatEditText editTextSimple = findViewById(R.id.formattedEditText_simple);
+        FormattedEditText editTextSimple = findViewById(R.id.formattedEditText_simple);
         editTextSimple.addTextChangedListener(
                 new TextWatcher() {
                     @Override

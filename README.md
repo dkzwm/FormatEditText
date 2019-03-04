@@ -14,8 +14,8 @@ FormatEditText可以用来当做号码格式化文本输入框使用, 可以用�
 下载 [Demo.apk](https://raw.githubusercontent.com/dkzwm/FormatEditText/master/demo/demo.apk)    
 ## 快照
 <img src='snapshot.gif'></img>
-## Installation
-Add the following dependency to your build.gradle file:
+## 引入
+添加如下依赖到你的 build.gradle 文件:
 ```
 dependencies {
     implementation 'me.dkzwm.widget.fet:core:0.0.6'

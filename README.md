@@ -17,7 +17,6 @@ FormatEditText可以用来当做号码格式化文本输入框使用, 可以用�
 ## Installation
 Add the following dependency to your build.gradle file:
 ```
-```
 dependencies {
     implementation 'me.dkzwm.widget.fet:core:0.0.6'
     AndroidX Kotlin版本

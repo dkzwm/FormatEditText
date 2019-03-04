@@ -12,18 +12,16 @@ FormatEditText can be used as a number formatted text input box, which can be us
 Download [Demo.apk](https://raw.githubusercontent.com/dkzwm/FormatEditText/master/demo/demo.apk)    
 ## Snapshot
 <img src='snapshot.gif'></img>
-## How to used   
-#### Gradle
-```groovy
-repositories {  
-    ...
-    maven { url 'https://jitpack.io' }  
+## Installation
+Add the following dependency to your build.gradle file:
+```
+dependencies {
+    implementation 'me.dkzwm.widget.fet:core:0.0.6'
+    AndroidX Kotlin version
+    implementation 'me.dkzwm.widget.fet:core:0.0.6.androidxKT'
 }
-
-dependencies {  
-    compile 'com.github.dkzwm:FormatEditText:0.0.5.4'
-}
-``` 
+```
+## How to used
 #### In Xml
 ```
 //MODE_COMPLEX
@@ -55,7 +53,7 @@ editText.setMark("*");
 editText.setFormatStyle("+(**)-***-****-****");（manually enter "8613012345678"，then it will be formatted as "+(86)-130-1234-5678"）
 ```
 #### Xml属性 
-|名称|类型|描述|
+|Name|Format|Desc|
 |:---:|:---:|:---:|
 |fet_mode|enum|Set the mode， `MODE_SIMPLE` and `MODE_COMPLEX`|
 |fet_formatStyle|string|Set the format style，When `fet_mode` is `MODE_SIMPLE`, the format can only be a pure number. When `fet_mode` is `MODE_COMPLEX`, the format is an arbitrary format and the `fet_mark` attribute needs to be specified. If not specified then the default is `*`|

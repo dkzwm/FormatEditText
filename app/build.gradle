@@ -22,7 +22,7 @@ android {
 }
 
 dependencies {
-    implementation project(':library')
+    implementation project(':core')
     implementation rootProject.ext.libs.kotlin
     implementation rootProject.ext.libs.annotation
     implementation rootProject.ext.libs.appcompat

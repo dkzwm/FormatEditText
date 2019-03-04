@@ -1,5 +1,5 @@
 <resources>
-    <declare-styleable name="FormattedEditText">
+    <declare-styleable name="FormatEditText">
         <attr name="fet_mode" format="enum">
             <enum name="mode_simple" value="0"/>
             <enum name="mode_complex" value="1"/>

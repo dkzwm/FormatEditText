@@ -45,7 +45,7 @@ import java.util.List;
  *
  * @author dkzwm
  */
-public class FormattedEditText extends EditText {
+public class FormatEditText extends EditText {
     public static final int MODE_SIMPLE = 0;
     public static final int MODE_COMPLEX = 1;
     private static final String DEFAULT_PLACE_HOLDER = " ";
@@ -61,17 +61,17 @@ public class FormattedEditText extends EditText {
     private String mMark;
     private InputFilter mFilter;
 
-    public FormattedEditText(Context context) {
+    public FormatEditText(Context context) {
         super(context);
         init(context, null, 0);
     }
 
-    public FormattedEditText(Context context, AttributeSet attrs) {
+    public FormatEditText(Context context, AttributeSet attrs) {
         super(context, attrs);
         init(context, attrs, 0);
     }
 
-    public FormattedEditText(Context context, AttributeSet attrs, int defStyleAttr) {
+    public FormatEditText(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init(context, attrs, defStyleAttr);
     }
@@ -81,14 +81,14 @@ public class FormattedEditText extends EditText {
         if (attrs != null) {
             TypedArray ta =
                     context.obtainStyledAttributes(
-                            attrs, R.styleable.FormattedEditText, defStyleAttr, 0);
+                            attrs, R.styleable.FormatEditText, defStyleAttr, 0);
             try {
-                mMark = ta.getString(R.styleable.FormattedEditText_fet_mark);
-                @Mode int mode = ta.getInt(R.styleable.FormattedEditText_fet_mode, MODE_SIMPLE);
+                mMark = ta.getString(R.styleable.FormatEditText_fet_mark);
+                @Mode int mode = ta.getInt(R.styleable.FormatEditText_fet_mode, MODE_SIMPLE);
                 setMode(mode);
-                String placeHolder = ta.getString(R.styleable.FormattedEditText_fet_placeholder);
+                String placeHolder = ta.getString(R.styleable.FormatEditText_fet_placeholder);
                 setPlaceholder(TextUtils.isEmpty(placeHolder) ? DEFAULT_PLACE_HOLDER : placeHolder);
-                String formatStyle = ta.getString(R.styleable.FormattedEditText_fet_formatStyle);
+                String formatStyle = ta.getString(R.styleable.FormatEditText_fet_formatStyle);
                 setFormatStyle(formatStyle);
             } finally {
                 ta.recycle();

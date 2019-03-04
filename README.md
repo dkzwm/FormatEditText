@@ -14,18 +14,17 @@ FormatEditText可以用来当做号码格式化文本输入框使用, 可以用�
 下载 [Demo.apk](https://raw.githubusercontent.com/dkzwm/FormatEditText/master/demo/demo.apk)    
 ## 快照
 <img src='snapshot.gif'></img>
-## 使用   
-#### Gradle
-```groovy
-repositories {  
-    ...
-    maven { url 'https://jitpack.io' }  
+## Installation
+Add the following dependency to your build.gradle file:
+```
+```
+dependencies {
+    implementation 'me.dkzwm.widget.fet:core:0.0.6'
+    AndroidX Kotlin版本
+    implementation 'me.dkzwm.widget.fet:core:0.0.6.androidxKT'
 }
-
-dependencies {  
-    compile 'com.github.dkzwm:FormatEditText:0.0.5.4'
-}
-``` 
+```
+## 使用
 #### 在Xml中配置
 ```
 //组合模式

@@ -2,10 +2,12 @@
 buildscript {
     repositories {
         jcenter()
+        maven { url 'https://jitpack.io' }
         google()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.3.1'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
     }
 }
@@ -17,8 +19,8 @@ plugins {
 allprojects {
     repositories {
         jcenter()
+        maven { url 'https://jitpack.io' }
         google()
-        maven { url "https://jitpack.io" }
     }
 }
 
@@ -45,8 +47,6 @@ subprojects {
     }
 }
 
-
-
 ext {
     android = [
             compileSdkVersion: 28,
@@ -56,4 +56,16 @@ ext {
             versionCode      : 9,
             versionName      : "0.0.6"
     ]
+    bintray = [
+            siteUrl       : 'https://github.com/dkzwm/FormatEditText',
+            gitUrl        : 'https://github.com/dkzwm/FormatEditText.git',
+            groupId       : "me.dkzwm.widget.fet",
+            libVersion    : android.versionName,
+            developerId   : "dkzwm",
+            developerName : "Zhang Weiming",
+            developerEmail: "aidkzwm@gmail.com",
+            licenseName   : "MIT License",
+            licenseUrl    : "https://opensource.org/licenses/MIT",
+    ]
+    allLicenses = ['MIT']
 }

@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity() {
                         mTextViewLogs.append("未格式化: afterTextChanged    s:$s\n\n")
                     }
                 })
-        val editTextComplex = findViewById<EditText>(R.id.formattedEditText_complex)
+        val editTextComplex = findViewById<FormattedEditText>(R.id.formattedEditText_complex)
         editTextComplex.addTextChangedListener(
                 object : TextWatcher {
                     override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {

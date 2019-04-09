@@ -37,7 +37,7 @@ import java.util.*
  * @author dkzwm
  */
 class FormattedEditText : EditText {
-    private val mBuilder = StringBuilder()
+    private val mFormattedText = StringBuilder()
     private var mHolders: Array<Placeholder?>? = null
     private var mPlaceholder: String? = null
     private var mPlaceholders: String? = null
@@ -128,7 +128,8 @@ class FormattedEditText : EditText {
                 for (i in 0 until style.length) {
                     val sub = style.substring(i, i + 1)
                     if (sub != mMark) {
-                        if (builder.indexOf(sub) < 0) builder.append(sub)
+                        if (builder.indexOf(sub) < 0 && !TextUtils.isDigitsOnly(sub))
+                            builder.append(sub)
                         holder = Placeholder()
                         holder.index = i
                         holder.holder = sub
@@ -186,6 +187,25 @@ class FormattedEditText : EditText {
         }
     }
 
+    fun getRealText(): String {
+        val formattedText = mFormattedText.toString()
+        var holderIndex = 0
+        val holders = mHolders ?: return formattedText
+        val realText = StringBuilder()
+        for (i in 0 until formattedText.length) {
+            if (holderIndex >= holders.size) {
+                realText.append(formattedText.substring(i))
+                return realText.toString()
+            }
+            if (holders[holderIndex]?.index ?: 0 == i) {
+                holderIndex++
+                continue
+            }
+            realText.append(formattedText.substring(i, i + 1))
+        }
+        return realText.toString()
+    }
+
     private fun sendBeforeTextChanged(s: CharSequence,
                                       start: Int,
                                       count: Int,
@@ -223,25 +243,25 @@ class FormattedEditText : EditText {
     private fun formatTextWhenDelete(s: CharSequence,
                                      start: Int,
                                      before: Int) {
-        val lastText = mBuilder.toString()
+        val lastText = mFormattedText.toString()
         val currentText = s.toString()
         val deletedLast = start >= currentText.length
         val holders = mHolders ?: return
-        mBuilder.delete(start, lastText.length)
+        mFormattedText.delete(start, lastText.length)
         if (!deletedLast) formatTextNoCursor(currentText, start, 0)
-        val tempText = mBuilder.toString()
+        val tempText = mFormattedText.toString()
         mLastIndex = holders.size / 2
         var pos = start
         for (i in pos downTo 1) {
             val sub = tempText.substring(i - 1, i)
             val place = findPlaceholder(i - 1)
             if (sub == place) {
-                if (deletedLast) mBuilder.delete(i - 1, i)
+                if (deletedLast) mFormattedText.delete(i - 1, i)
                 pos--
             } else break
         }
         mIsFormatted = true
-        val text = mBuilder.toString()
+        val text = mFormattedText.toString()
         val realCount = lastText.length - text.length
         sendBeforeTextChanged(lastText, pos, realCount, 0)
         if (!deletedLast || pos != start || realCount != before) setText(text)
@@ -254,20 +274,20 @@ class FormattedEditText : EditText {
     private fun formatTextWhenAppend(s: CharSequence,
                                      start: Int,
                                      count: Int) {
-        val lastText = mBuilder.toString()
+        val lastText = mFormattedText.toString()
         val currentText = s.toString()
         val holders = mHolders ?: return
         val appendedLast = start > (holders[holders.size - 1]?.index ?: 0)
         val afterAppendStart: Int
         if (!appendedLast) {
-            mBuilder.delete(start, lastText.length)
+            mFormattedText.delete(start, lastText.length)
             afterAppendStart = formatTextNoCursor(currentText, start, count)
         } else {
             afterAppendStart = start + count
-            mBuilder.insert(start, currentText.substring(start, afterAppendStart))
+            mFormattedText.insert(start, currentText.substring(start, afterAppendStart))
         }
         mIsFormatted = true
-        val text = mBuilder.toString()
+        val text = mFormattedText.toString()
         val realCount = text.length - lastText.length
         sendBeforeTextChanged(lastText, start, realCount, 0)
         if (!appendedLast || afterAppendStart != start + count || realCount != count) setText(text)
@@ -290,7 +310,7 @@ class FormattedEditText : EditText {
         mLastIndex = holders.size / 2
         var i = start
         while (i < length) {
-            if (mBuilder.length > maxPos + 1) {
+            if (mFormattedText.length > maxPos + 1) {
                 afterAppendStart += if (calcCount < 0) 0 else calcCount
                 if (count > 0 && length >= maxPos + count) {
                     val hasHolderEndIndex = maxPos + count + 1
@@ -299,12 +319,12 @@ class FormattedEditText : EditText {
                     val len = substring.length
                     for (j in 0 until len) {
                         val sub = substring.substring(j, j + 1)
-                        if (!placeholders.contains(sub)) mBuilder.append(sub)
+                        if (!placeholders.contains(sub)) mFormattedText.append(sub)
                     }
-                    mBuilder.append(current.substring(realEndIndex))
+                    mFormattedText.append(current.substring(realEndIndex))
                     return afterAppendStart
                 }
-                mBuilder.append(current.substring(i))
+                mFormattedText.append(current.substring(i))
                 return afterAppendStart
             }
             val sub = current.substring(i, i + 1)
@@ -314,13 +334,13 @@ class FormattedEditText : EditText {
                 continue
             }
             val place = findPlaceholder(position)
-            if (place != null && !TextUtils.equals(place, sub)) {
-                mBuilder.append(place)
+            if (place != null && (count > 0 || !TextUtils.equals(place, sub))) {
+                mFormattedText.append(place)
                 i--
                 position++
                 if (calcCount >= 0) afterAppendStart++
             } else {
-                mBuilder.append(sub)
+                mFormattedText.append(sub)
                 position++
                 calcCount--
                 if (calcCount >= 0) afterAppendStart++
@@ -413,7 +433,7 @@ class FormattedEditText : EditText {
         override fun afterTextChanged(s: Editable) {
             val holders = mHolders
             if (holders == null || holders.isEmpty()) sendAfterTextChanged(s)
-            if (s.isEmpty() && mBuilder.isNotEmpty()) mBuilder.setLength(0)
+            if (s.isEmpty() && mFormattedText.isNotEmpty()) mFormattedText.setLength(0)
         }
     }
 

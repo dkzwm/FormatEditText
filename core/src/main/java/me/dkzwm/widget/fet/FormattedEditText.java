@@ -50,7 +50,7 @@ public class FormattedEditText extends EditText {
     public static final int MODE_COMPLEX = 1;
     private static final String DEFAULT_PLACE_HOLDER = " ";
     private static final String DEFAULT_MARK = "*";
-    private StringBuilder mBuilder = new StringBuilder();
+    private StringBuilder mFormattedText = new StringBuilder();
     private Placeholder[] mHolders;
     private String mPlaceholder;
     private String mPlaceholders;
@@ -141,7 +141,8 @@ public class FormattedEditText extends EditText {
                 for (int i = 0; i < style.length(); i++) {
                     final String sub = style.substring(i, i + 1);
                     if (!sub.equals(mMark)) {
-                        if (builder.indexOf(sub) < 0) builder.append(sub);
+                        if (builder.indexOf(sub) < 0 && !TextUtils.isDigitsOnly(sub))
+                            builder.append(sub);
                         holder = new Placeholder();
                         holder.index = i;
                         holder.holder = sub;
@@ -199,6 +200,24 @@ public class FormattedEditText extends EditText {
         }
     }
 
+    public String getRealText() {
+        final String formattedText = mFormattedText.toString();
+        final StringBuilder realText = new StringBuilder();
+        int holderIndex = 0;
+        for (int i = 0; i < formattedText.length(); i++) {
+            if (holderIndex >= mHolders.length) {
+                realText.append(formattedText.substring(i));
+                return realText.toString();
+            }
+            if (mHolders[holderIndex].index == i) {
+                holderIndex++;
+                continue;
+            }
+            realText.append(formattedText.substring(i, i + 1));
+        }
+        return realText.toString();
+    }
+
     private void sendBeforeTextChanged(CharSequence s, int start, int count, int after) {
         final List<TextWatcher> list = mWatchers;
         if (list != null) {
@@ -228,24 +247,24 @@ public class FormattedEditText extends EditText {
     }
 
     private void formatTextWhenDelete(final CharSequence s, int start, int before) {
-        final String lastText = mBuilder.toString();
+        final String lastText = mFormattedText.toString();
         final String currentText = s.toString();
         final boolean deletedLast = start >= currentText.length();
-        mBuilder.delete(start, lastText.length());
+        mFormattedText.delete(start, lastText.length());
         if (!deletedLast) formatTextNoCursor(currentText, start, 0);
-        final String tempText = mBuilder.toString();
+        final String tempText = mFormattedText.toString();
         mLastIndex = mHolders.length / 2;
         int pos = start;
         for (int i = pos; i > 0; i--) {
             final String sub = tempText.substring(i - 1, i);
             final String place = findPlaceholder(i - 1);
             if (sub.equals(place)) {
-                if (deletedLast) mBuilder.delete(i - 1, i);
+                if (deletedLast) mFormattedText.delete(i - 1, i);
                 pos--;
             } else break;
         }
         mIsFormatted = true;
-        final String text = mBuilder.toString();
+        final String text = mFormattedText.toString();
         final int realCount = lastText.length() - text.length();
         sendBeforeTextChanged(lastText, pos, realCount, 0);
         if (!deletedLast || pos != start || realCount != before) setText(text);
@@ -256,19 +275,19 @@ public class FormattedEditText extends EditText {
     }
 
     private void formatTextWhenAppend(final CharSequence s, int start, int count) {
-        final String lastText = mBuilder.toString();
+        final String lastText = mFormattedText.toString();
         final String currentText = s.toString();
         boolean appendedLast = start > mHolders[mHolders.length - 1].index;
         int afterAppendStart;
         if (!appendedLast) {
-            mBuilder.delete(start, lastText.length());
+            mFormattedText.delete(start, lastText.length());
             afterAppendStart = formatTextNoCursor(currentText, start, count);
         } else {
             afterAppendStart = start + count;
-            mBuilder.insert(start, currentText.substring(start, afterAppendStart));
+            mFormattedText.insert(start, currentText.substring(start, afterAppendStart));
         }
         mIsFormatted = true;
-        final String text = mBuilder.toString();
+        final String text = mFormattedText.toString();
         final int realCount = text.length() - lastText.length();
         sendBeforeTextChanged(lastText, start, realCount, 0);
         if (!appendedLast || afterAppendStart != start + count || realCount != count) setText(text);
@@ -286,7 +305,7 @@ public class FormattedEditText extends EditText {
         final int maxPos = mHolders[mHolders.length - 1].index;
         mLastIndex = mHolders.length / 2;
         for (int i = start; i < length; i++) {
-            if (mBuilder.length() > maxPos + 1) {
+            if (mFormattedText.length() > maxPos + 1) {
                 afterAppendStart += calcCount < 0 ? 0 : calcCount;
                 if (count > 0 && length >= maxPos + count) {
                     final int hasHolderEndIndex = maxPos + count + 1;
@@ -296,12 +315,12 @@ public class FormattedEditText extends EditText {
                     final int len = substring.length();
                     for (int j = 0; j < len; j++) {
                         final String sub = substring.substring(j, j + 1);
-                        if (!mPlaceholders.contains(sub)) mBuilder.append(sub);
+                        if (!mPlaceholders.contains(sub)) mFormattedText.append(sub);
                     }
-                    mBuilder.append(current.substring(realEndIndex));
+                    mFormattedText.append(current.substring(realEndIndex));
                     return afterAppendStart;
                 }
-                mBuilder.append(current.substring(i));
+                mFormattedText.append(current.substring(i));
                 return afterAppendStart;
             }
             final String sub = current.substring(i, i + 1);
@@ -310,13 +329,13 @@ public class FormattedEditText extends EditText {
                 continue;
             }
             final String place = findPlaceholder(position);
-            if (place != null && !TextUtils.equals(place, sub)) {
-                mBuilder.append(place);
+            if (place != null && (count > 0 || !TextUtils.equals(place, sub))) {
+                mFormattedText.append(place);
                 i--;
                 position++;
                 if (calcCount >= 0) afterAppendStart++;
             } else {
-                mBuilder.append(sub);
+                mFormattedText.append(sub);
                 position++;
                 calcCount--;
                 if (calcCount >= 0) afterAppendStart++;
@@ -396,7 +415,7 @@ public class FormattedEditText extends EditText {
         @Override
         public void afterTextChanged(Editable s) {
             if (mHolders == null || mHolders.length == 0) sendAfterTextChanged(s);
-            if (s.length() == 0 && mBuilder.length() != 0) mBuilder.setLength(0);
+            if (s.length() == 0 && mFormattedText.length() != 0) mFormattedText.setLength(0);
         }
     }
 }

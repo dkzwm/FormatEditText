@@ -14,10 +14,10 @@
         android:inputType="phone"
         android:maxLines="13"
         android:padding="12dp"
-        android:text="8613012345678"
+        android:text="13012345678"
         android:textColor="@color/colorPrimary"
         android:textSize="16sp"
-        app:fet_formatStyle="+(**)-***-****-****"
+        app:fet_formatStyle="+(86)-***-****-****"
         app:fet_mark="*"
         app:fet_mode="mode_complex"/>
 

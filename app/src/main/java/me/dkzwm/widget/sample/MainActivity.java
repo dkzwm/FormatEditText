@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
                         mTextViewLogs.append("未格式化: afterTextChanged    s:" + s + "\n\n");
                     }
                 });
-        final EditText editTextComplex = findViewById(R.id.formattedEditText_complex);
+        final FormattedEditText editTextComplex = findViewById(R.id.formattedEditText_complex);
         editTextComplex.addTextChangedListener(
                 new TextWatcher() {
                     @Override
@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
                         mTextViewLogs.append("复杂格式化后: afterTextChanged    s:" + s + "\n\n");
                     }
                 });
-        FormattedEditText editTextSimple = findViewById(R.id.formattedEditText_simple);
+        final FormattedEditText editTextSimple = findViewById(R.id.formattedEditText_simple);
         editTextSimple.addTextChangedListener(
                 new TextWatcher() {
                     @Override

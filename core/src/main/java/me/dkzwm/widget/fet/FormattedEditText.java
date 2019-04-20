@@ -267,9 +267,11 @@ public class FormattedEditText extends EditText {
         final String text = mFormattedText.toString();
         final int realCount = lastText.length() - text.length();
         sendBeforeTextChanged(lastText, pos, realCount, 0);
-        if (!deletedLast || pos != start || realCount != before) setText(text);
+        if (!deletedLast || pos != start || realCount != before) {
+            setText(text);
+            setSelection(pos);
+        }
         mIsFormatted = false;
-        setSelection(pos);
         sendOnTextChanged(text, pos, realCount, 0);
         sendAfterTextChanged(getText());
     }
@@ -290,9 +292,11 @@ public class FormattedEditText extends EditText {
         final String text = mFormattedText.toString();
         final int realCount = text.length() - lastText.length();
         sendBeforeTextChanged(lastText, start, realCount, 0);
-        if (!appendedLast || afterAppendStart != start + count || realCount != count) setText(text);
+        if (!appendedLast || afterAppendStart != start + count || realCount != count) {
+            setText(text);
+            setSelection(afterAppendStart);
+        }
         mIsFormatted = false;
-        setSelection(afterAppendStart);
         sendOnTextChanged(text, start, realCount, 0);
         sendAfterTextChanged(getText());
     }

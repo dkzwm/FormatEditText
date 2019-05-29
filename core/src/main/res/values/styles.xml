@@ -7,5 +7,12 @@
         <attr name="fet_formatStyle" format="string"/>
         <attr name="fet_placeholder" format="string"/>
         <attr name="fet_mark" format="string"/>
+        <attr name="fet_clearDrawable" format="reference"/>
+        <attr name="fet_drawablePadding" format="dimension"/>
+        <attr name="fet_drawableGravity" format="enum">
+            <enum name="fet_top" value="0"/>
+            <enum name="fet_center" value="1"/>
+            <enum name="fet_bottom" value="2"/>
+        </attr>
     </declare-styleable>
 </resources>

@@ -2,4 +2,5 @@
 <resources>
     <string name="app_name">FormatEditText</string>
     <string name="clear_logs">清除日志</string>
+    <string name="please_input_phone_number">请输入11位手机号码</string>
 </resources>

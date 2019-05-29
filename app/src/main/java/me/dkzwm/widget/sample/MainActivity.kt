@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import me.dkzwm.widget.fet.FormattedEditText
 
 /**
@@ -126,7 +127,33 @@ class MainActivity : AppCompatActivity() {
 
                     override fun afterTextChanged(s: Editable) {
                         mTextViewLogs.append("简单格式化后: afterTextChanged    s:$s\n\n")
+                        checkSimpleValid(editTextSimple)
                     }
                 })
+        editTextSimple.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                checkSimpleValid(editTextSimple)
+            } else {
+                editTextSimple.setCompoundDrawablesWithIntrinsicBounds(null,
+                        null, null, null)
+            }
+        }
+    }
+
+    private fun checkSimpleValid(editText: EditText) {
+        when {
+            editText.length() == 0 -> {
+                editText.setCompoundDrawablesWithIntrinsicBounds(null,
+                        null, null, null)
+            }
+            editText.length() == 13 -> {
+                editText.setCompoundDrawablesWithIntrinsicBounds(null, null, ContextCompat
+                        .getDrawable(this@MainActivity, R.drawable.icon_valid), null)
+            }
+            else -> {
+                editText.setCompoundDrawablesWithIntrinsicBounds(null, null, ContextCompat
+                        .getDrawable(this@MainActivity, R.drawable.icon_invalid), null)
+            }
+        }
     }
 }

@@ -24,8 +24,14 @@
 package me.dkzwm.widget.fet
 
 import android.content.Context
+import android.graphics.Canvas
+import android.graphics.drawable.Drawable
+import android.os.Build
 import android.text.*
 import android.util.AttributeSet
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewConfiguration
 import android.widget.EditText
 import androidx.annotation.CallSuper
 import androidx.annotation.IntDef
@@ -48,6 +54,13 @@ class FormattedEditText : EditText {
     private var mWatchers: MutableList<TextWatcher>? = null
     private var mMark: String? = null
     private var mFilter: InputFilter? = null
+    private var mClearDrawable: Drawable? = null
+    private var mGravity = GRAVITY_CENTER
+    private var mRealPaddingRight: Int = 0
+    private var mTouchSlop: Int = 0
+    private var mDrawablePadding = 0
+    private val mDownPoint = FloatArray(2)
+    private var mClearClickListener: OnClearClickListener? = null
 
     constructor(context: Context) : super(context) {
         init(context, null, 0)
@@ -63,6 +76,8 @@ class FormattedEditText : EditText {
 
     private fun init(context: Context, attrs: AttributeSet?, defStyleAttr: Int) {
         super.addTextChangedListener(FormattedTextWatcher())
+        val viewConfiguration = ViewConfiguration.get(getContext())
+        mTouchSlop = viewConfiguration.scaledTouchSlop
         if (attrs != null) {
             val ta = context.obtainStyledAttributes(
                     attrs, R.styleable.FormattedEditText, defStyleAttr, 0)
@@ -74,16 +89,86 @@ class FormattedEditText : EditText {
                 setPlaceholder(if (TextUtils.isEmpty(placeHolder)) DEFAULT_PLACE_HOLDER else placeHolder)
                 val formatStyle = ta.getString(R.styleable.FormattedEditText_fet_formatStyle)
                 setFormatStyle(formatStyle)
+                mClearDrawable = ta.getDrawable(R.styleable.FormattedEditText_fet_clearDrawable)
+                mGravity = ta.getInt(
+                        R.styleable.FormattedEditText_fet_drawableGravity, GRAVITY_CENTER)
+                mDrawablePadding = ta.getDimensionPixelSize(
+                        R.styleable.FormattedEditText_fet_drawablePadding, 0)
             } finally {
                 ta.recycle()
             }
         } else {
             setPlaceholder(DEFAULT_PLACE_HOLDER)
         }
+        setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
         val text = text
         val holders = mHolders
         if (holders != null && holders.isNotEmpty() && text.isNotEmpty())
             formatTextWhenAppend(text, 0, text.length)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            if (layoutDirection == View.LAYOUT_DIRECTION_RTL) {
+                throw UnsupportedOperationException(
+                        "We can not support this feature when the layout is right-to-left")
+            }
+        }
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        val clearDrawable = mClearDrawable
+        if (clearDrawable != null) {
+            val top = paddingTop + mDrawablePadding
+            val bottom = paddingBottom + mDrawablePadding
+            val width = clearDrawable.intrinsicWidth
+            val height = clearDrawable.intrinsicHeight
+            val newRight = w - mRealPaddingRight - mDrawablePadding
+            when (mGravity) {
+                GRAVITY_TOP -> clearDrawable.setBounds(newRight - width, top, newRight, top + height)
+                GRAVITY_CENTER -> {
+                    val newTop = top + (h - top - bottom - height) / 2
+                    clearDrawable.setBounds(newRight - width, newTop, newRight, newTop + height)
+                }
+                else -> {
+                    val newBottom = h - bottom
+                    clearDrawable.setBounds(newRight - width, newBottom - height, newRight, newBottom)
+                }
+            }
+        }
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        val clearDrawable = mClearDrawable
+        if (clearDrawable != null) {
+            val width = clearDrawable.intrinsicWidth + mDrawablePadding * 2
+            val height = clearDrawable.intrinsicHeight + mDrawablePadding * 2
+            val measuredWidth = measuredWidth
+            val measuredHeight = measuredHeight
+            var remeasuredWidth = measuredWidth
+            var remeasuredHeight = measuredHeight
+            if (measuredWidth < width) {
+                val specMode = MeasureSpec.getMode(widthMeasureSpec)
+                val specSize = MeasureSpec.getSize(widthMeasureSpec)
+                if (specMode != MeasureSpec.EXACTLY) {
+                    remeasuredWidth = Math.max(width, measuredWidth)
+                    if (specMode == MeasureSpec.AT_MOST) {
+                        remeasuredWidth = Math.min(remeasuredWidth, specSize)
+                    }
+                }
+            }
+            if (measuredHeight < height) {
+                val specMode = MeasureSpec.getMode(heightMeasureSpec)
+                val specSize = MeasureSpec.getSize(heightMeasureSpec)
+                if (specMode != MeasureSpec.EXACTLY) {
+                    remeasuredHeight = Math.max(height, measuredHeight)
+                    if (specMode == MeasureSpec.AT_MOST) {
+                        remeasuredHeight = Math.min(remeasuredHeight, specSize)
+                    }
+                }
+            }
+            if (remeasuredWidth != measuredWidth || remeasuredHeight != measuredHeight)
+                setMeasuredDimension(remeasuredWidth, remeasuredHeight)
+        }
     }
 
     override fun addTextChangedListener(watcher: TextWatcher) {
@@ -93,6 +178,95 @@ class FormattedEditText : EditText {
 
     override fun removeTextChangedListener(watcher: TextWatcher) {
         mWatchers?.remove(watcher)
+    }
+
+    override fun setPadding(left: Int, top: Int, right: Int, bottom: Int) {
+        mRealPaddingRight = right
+        var newRight = right
+        val clearDrawable = mClearDrawable
+        if (clearDrawable != null)
+            newRight += clearDrawable.intrinsicWidth + mDrawablePadding * 2
+        super.setPadding(left, top, newRight, bottom)
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        val clearDrawable = mClearDrawable
+        if (clearDrawable != null && isFocused && length() > 0) {
+            canvas.save()
+            canvas.translate(scrollX.toFloat(), scrollY.toFloat())
+            clearDrawable.draw(canvas)
+            canvas.restore()
+        }
+    }
+
+    override fun drawableStateChanged() {
+        val clearDrawable = mClearDrawable
+        if (clearDrawable != null) {
+            val state = drawableState
+            if (clearDrawable.isStateful && clearDrawable.setState(state)) {
+                val dirty = clearDrawable.bounds
+                val scrollX = scrollX
+                val scrollY = scrollY
+                invalidate(
+                        dirty.left + scrollX,
+                        dirty.top + scrollY,
+                        dirty.right + scrollX,
+                        dirty.bottom + scrollY)
+            }
+        }
+        super.drawableStateChanged()
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        val clearDrawable = mClearDrawable
+        if (clearDrawable != null) {
+            val x = event.x
+            val y = event.y
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    mDownPoint[0] = x
+                    mDownPoint[1] = y
+                }
+                MotionEvent.ACTION_UP -> {
+                    val rect = clearDrawable.bounds
+                    if (rect.top - mDrawablePadding <= y
+                            && rect.bottom + mDrawablePadding >= y
+                            && rect.left - mDrawablePadding <= x
+                            && rect.right + mDrawablePadding >= x) {
+                        if (Math.abs(mDownPoint[0] - x) <= mTouchSlop && Math.abs(mDownPoint[1] - y) <= mTouchSlop) {
+                            val clearClickListener = mClearClickListener;
+                            if (clearClickListener != null) {
+                                if (!clearClickListener.onClearClick(this, clearDrawable))
+                                    setText("")
+                            } else
+                                setText("")
+                            super.onTouchEvent(event)
+                            return true
+                        }
+                    }
+                }
+            }
+        }
+        return super.onTouchEvent(event)
+    }
+
+    fun setClearDrawable(drawable: Drawable) {
+        if (mClearDrawable !== drawable) {
+            mClearDrawable = drawable
+            requestLayout()
+        }
+    }
+
+    fun setClearDrawablePadding(pad: Int) {
+        if (mDrawablePadding != pad) {
+            mDrawablePadding = pad
+            if (mClearDrawable != null) requestLayout()
+        }
+    }
+
+    fun setOnClearClickListener(clickListener: OnClearClickListener) {
+        mClearClickListener = clickListener
     }
 
     fun setFormatStyle(style: String?) {
@@ -266,7 +440,10 @@ class FormattedEditText : EditText {
         sendBeforeTextChanged(lastText, pos, realCount, 0)
         if (!deletedLast || pos != start || realCount != before) {
             setText(text)
-            setSelection(pos)
+            if (length() >= pos)
+                setSelection(pos)
+            else
+                setSelection(length())
         }
         mIsFormatted = false
         sendOnTextChanged(text, pos, realCount, 0)
@@ -292,9 +469,12 @@ class FormattedEditText : EditText {
         val text = mFormattedText.toString()
         val realCount = text.length - lastText.length
         sendBeforeTextChanged(lastText, start, realCount, 0)
-        if (!appendedLast || afterAppendStart != start + count || realCount != count){
+        if (!appendedLast || afterAppendStart != start + count || realCount != count) {
             setText(text)
-            setSelection(afterAppendStart)
+            if (length() >= afterAppendStart)
+                setSelection(afterAppendStart)
+            else
+                setSelection(length())
         }
         mIsFormatted = false
         sendOnTextChanged(text, start, realCount, 0)
@@ -386,6 +566,10 @@ class FormattedEditText : EditText {
         internal var holder: String? = null
     }
 
+    interface OnClearClickListener {
+        fun onClearClick(editText: FormattedEditText, drawable: Drawable): Boolean
+    }
+
     private inner class PlaceholderFilter : InputFilter {
         private val mFilterBuilder = StringBuilder()
 
@@ -444,6 +628,9 @@ class FormattedEditText : EditText {
     companion object {
         const val MODE_SIMPLE = 0
         const val MODE_COMPLEX = 1
+        const val GRAVITY_TOP = 0
+        const val GRAVITY_CENTER = 1
+        const val GRAVITY_BOTTOM = 2
         private const val DEFAULT_PLACE_HOLDER = " "
         private const val DEFAULT_MARK = "*"
     }

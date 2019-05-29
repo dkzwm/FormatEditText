@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">FormatEditText</string>
     <string name="clear_logs">Clear Logs</string>
+    <string name="please_input_phone_number">Please input phone number</string>
 </resources>

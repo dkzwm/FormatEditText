@@ -25,6 +25,10 @@ package me.dkzwm.widget.fet;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Canvas;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.support.annotation.CallSuper;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
@@ -34,6 +38,8 @@ import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.ViewConfiguration;
 import android.widget.EditText;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -48,8 +54,12 @@ import java.util.List;
 public class FormattedEditText extends EditText {
     public static final int MODE_SIMPLE = 0;
     public static final int MODE_COMPLEX = 1;
+    public static final int GRAVITY_TOP = 0;
+    public static final int GRAVITY_CENTER = 1;
+    public static final int GRAVITY_BOTTOM = 2;
     private static final String DEFAULT_PLACE_HOLDER = " ";
     private static final String DEFAULT_MARK = "*";
+    protected int mTouchSlop;
     private StringBuilder mFormattedText = new StringBuilder();
     private Placeholder[] mHolders;
     private String mPlaceholder;
@@ -60,6 +70,12 @@ public class FormattedEditText extends EditText {
     private List<TextWatcher> mWatchers;
     private String mMark;
     private InputFilter mFilter;
+    private Drawable mClearDrawable;
+    private int mGravity = GRAVITY_CENTER;
+    private int mRealPaddingRight;
+    private int mDrawablePadding = 0;
+    private float[] mDownPoint = new float[2];
+    private OnClearClickListener mClearClickListener;
 
     public FormattedEditText(Context context) {
         super(context);
@@ -78,6 +94,8 @@ public class FormattedEditText extends EditText {
 
     private void init(Context context, AttributeSet attrs, int defStyleAttr) {
         super.addTextChangedListener(new FormattedTextWatcher());
+        ViewConfiguration viewConfiguration = ViewConfiguration.get(getContext());
+        mTouchSlop = viewConfiguration.getScaledTouchSlop();
         if (attrs != null) {
             TypedArray ta =
                     context.obtainStyledAttributes(
@@ -87,18 +105,97 @@ public class FormattedEditText extends EditText {
                 @Mode int mode = ta.getInt(R.styleable.FormattedEditText_fet_mode, MODE_SIMPLE);
                 setMode(mode);
                 String placeHolder = ta.getString(R.styleable.FormattedEditText_fet_placeholder);
-                setPlaceholder(TextUtils.isEmpty(placeHolder) ? DEFAULT_PLACE_HOLDER : placeHolder);
+                setPlaceholder(
+                        (placeHolder == null || placeHolder.length() == 0)
+                                ? DEFAULT_PLACE_HOLDER
+                                : placeHolder);
                 String formatStyle = ta.getString(R.styleable.FormattedEditText_fet_formatStyle);
                 setFormatStyle(formatStyle);
+                mClearDrawable = ta.getDrawable(R.styleable.FormattedEditText_fet_clearDrawable);
+                mGravity =
+                        ta.getInt(
+                                R.styleable.FormattedEditText_fet_drawableGravity, GRAVITY_CENTER);
+                mDrawablePadding =
+                        ta.getDimensionPixelSize(
+                                R.styleable.FormattedEditText_fet_drawablePadding, 0);
             } finally {
                 ta.recycle();
             }
         } else {
             setPlaceholder(DEFAULT_PLACE_HOLDER);
         }
+        setPadding(getPaddingLeft(), getPaddingTop(), getPaddingRight(), getPaddingBottom());
         final CharSequence text = getText();
         if (mHolders != null && mHolders.length > 0 && text.length() > 0)
             formatTextWhenAppend(text, 0, text.length());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            if (getLayoutDirection() == LAYOUT_DIRECTION_RTL) {
+                throw new UnsupportedOperationException(
+                        "We can not support this feature when the layout is right-to-left");
+            }
+        }
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        if (mClearDrawable != null) {
+            final int top = getPaddingTop() + mDrawablePadding;
+            final int bottom = getPaddingBottom() + mDrawablePadding;
+            int width = mClearDrawable.getIntrinsicWidth();
+            int height = mClearDrawable.getIntrinsicHeight();
+            final int newRight = w - mRealPaddingRight - mDrawablePadding;
+            switch (mGravity) {
+                case GRAVITY_TOP:
+                    mClearDrawable.setBounds(newRight - width, top, newRight, top + height);
+                    break;
+                case GRAVITY_CENTER:
+                    int newTop = top + (h - top - bottom - height) / 2;
+                    mClearDrawable.setBounds(newRight - width, newTop, newRight, newTop + height);
+                    break;
+                case GRAVITY_BOTTOM:
+                default:
+                    int newBottom = h - bottom;
+                    mClearDrawable.setBounds(
+                            newRight - width, newBottom - height, newRight, newBottom);
+                    break;
+            }
+        }
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        if (mClearDrawable != null) {
+            int width = mClearDrawable.getIntrinsicWidth() + mDrawablePadding * 2;
+            int height = mClearDrawable.getIntrinsicHeight() + mDrawablePadding * 2;
+            int measuredWidth = getMeasuredWidth();
+            int measuredHeight = getMeasuredHeight();
+            int remeasuredWidth = measuredWidth, remeasuredHeight = measuredHeight;
+            if (measuredWidth < width) {
+                int specMode = MeasureSpec.getMode(widthMeasureSpec);
+                int specSize = MeasureSpec.getSize(widthMeasureSpec);
+                if (specMode != MeasureSpec.EXACTLY) {
+                    remeasuredWidth = Math.max(width, measuredWidth);
+                    if (specMode == MeasureSpec.AT_MOST) {
+                        remeasuredWidth = Math.min(remeasuredWidth, specSize);
+                    }
+                }
+            }
+            if (measuredHeight < height) {
+                int specMode = MeasureSpec.getMode(heightMeasureSpec);
+                int specSize = MeasureSpec.getSize(heightMeasureSpec);
+                if (specMode != MeasureSpec.EXACTLY) {
+                    remeasuredHeight = Math.max(height, measuredHeight);
+                    if (specMode == MeasureSpec.AT_MOST) {
+                        remeasuredHeight = Math.min(remeasuredHeight, specSize);
+                    }
+                }
+            }
+            if (remeasuredWidth != measuredWidth || remeasuredHeight != measuredHeight) {
+                setMeasuredDimension(remeasuredWidth, remeasuredHeight);
+            }
+        }
     }
 
     @Override
@@ -110,6 +207,94 @@ public class FormattedEditText extends EditText {
     @Override
     public void removeTextChangedListener(TextWatcher watcher) {
         if (mWatchers != null) mWatchers.remove(watcher);
+    }
+
+    @Override
+    public void setPadding(int left, int top, int right, int bottom) {
+        mRealPaddingRight = right;
+        if (mClearDrawable != null)
+            right += mClearDrawable.getIntrinsicWidth() + mDrawablePadding * 2;
+        super.setPadding(left, top, right, bottom);
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        if (mClearDrawable != null && isFocused() && length() > 0) {
+            canvas.save();
+            canvas.translate(getScrollX(), getScrollY());
+            mClearDrawable.draw(canvas);
+            canvas.restore();
+        }
+    }
+
+    @Override
+    protected void drawableStateChanged() {
+        if (mClearDrawable != null) {
+            final int[] state = getDrawableState();
+            if (mClearDrawable.isStateful() && mClearDrawable.setState(state)) {
+                final Rect dirty = mClearDrawable.getBounds();
+                final int scrollX = getScrollX();
+                final int scrollY = getScrollY();
+                invalidate(
+                        dirty.left + scrollX,
+                        dirty.top + scrollY,
+                        dirty.right + scrollX,
+                        dirty.bottom + scrollY);
+            }
+        }
+        super.drawableStateChanged();
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (mClearDrawable != null) {
+            final float x = event.getX();
+            final float y = event.getY();
+            final int action = event.getActionMasked();
+            switch (action) {
+                case MotionEvent.ACTION_DOWN:
+                    mDownPoint[0] = x;
+                    mDownPoint[1] = y;
+                    break;
+                case MotionEvent.ACTION_UP:
+                    final Rect rect = mClearDrawable.getBounds();
+                    if (rect.top - mDrawablePadding <= y
+                            && rect.bottom + mDrawablePadding >= y
+                            && rect.left - mDrawablePadding <= x
+                            && rect.right + mDrawablePadding >= x) {
+                        if (Math.abs(mDownPoint[0] - x) <= mTouchSlop
+                                && Math.abs(mDownPoint[1] - y) <= mTouchSlop) {
+                            if (mClearClickListener != null) {
+                                if (!mClearClickListener.onClearClick(this, mClearDrawable))
+                                    setText("");
+                            } else setText("");
+                            super.onTouchEvent(event);
+                            return true;
+                        }
+                    }
+                    break;
+            }
+        }
+        return super.onTouchEvent(event);
+    }
+
+    public void setClearDrawable(Drawable drawable) {
+        if (mClearDrawable != drawable) {
+            mClearDrawable = drawable;
+            requestLayout();
+        }
+    }
+
+    public void setClearDrawablePadding(int pad) {
+        if (mDrawablePadding != pad) {
+            mDrawablePadding = pad;
+            if (mClearDrawable != null) requestLayout();
+        }
+    }
+
+    public void setOnClearClickListener(OnClearClickListener clickListener) {
+        mClearClickListener = clickListener;
     }
 
     public void setFormatStyle(String style) {
@@ -164,7 +349,7 @@ public class FormattedEditText extends EditText {
     @Override
     @CallSuper
     public void setFilters(InputFilter[] filters) {
-        if (filters == null) throw new IllegalArgumentException();
+        if (filters == null) throw new IllegalArgumentException("filters can not be null");
         InputFilter[] replaceFilters = new InputFilter[filters.length + 1];
         if (mFilter == null) mFilter = new PlaceholderFilter();
         replaceFilters[0] = mFilter;
@@ -269,7 +454,8 @@ public class FormattedEditText extends EditText {
         sendBeforeTextChanged(lastText, pos, realCount, 0);
         if (!deletedLast || pos != start || realCount != before) {
             setText(text);
-            setSelection(pos);
+            if (length() >= pos) setSelection(pos);
+            else setSelection(length());
         }
         mIsFormatted = false;
         sendOnTextChanged(text, pos, realCount, 0);
@@ -294,7 +480,8 @@ public class FormattedEditText extends EditText {
         sendBeforeTextChanged(lastText, start, realCount, 0);
         if (!appendedLast || afterAppendStart != start + count || realCount != count) {
             setText(text);
-            setSelection(afterAppendStart);
+            if (length() >= afterAppendStart) setSelection(afterAppendStart);
+            else setSelection(length());
         }
         mIsFormatted = false;
         sendOnTextChanged(text, start, realCount, 0);
@@ -374,6 +561,10 @@ public class FormattedEditText extends EditText {
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({MODE_SIMPLE, MODE_COMPLEX})
     @interface Mode {}
+
+    public interface OnClearClickListener {
+        boolean onClearClick(FormattedEditText editText, Drawable drawable);
+    }
 
     private static class Placeholder {
         int index;

@@ -2,6 +2,7 @@ package me.dkzwm.widget.sample;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -143,7 +144,24 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void afterTextChanged(Editable s) {
                         mTextViewLogs.append("简单格式化后: afterTextChanged    s:" + s + "\n\n");
+                        checkSimpleValid(editTextSimple);
                     }
                 });
+        checkSimpleValid(editTextSimple);
+    }
+
+    private void checkSimpleValid(EditText editText) {
+        if (editText.length() == 0) {
+            editText.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
+        } else if (editText.length() == 13) {
+            editText.setCompoundDrawablesWithIntrinsicBounds(
+                    null,
+                    null,
+                    ContextCompat.getDrawable(MainActivity.this, R.drawable.icon_valid),
+                    null);
+        } else {
+            editText.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
+            editText.setError("哈哈哈哈");
+        }
     }
 }

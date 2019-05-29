@@ -41,7 +41,6 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.ViewConfiguration;
 import android.widget.EditText;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
@@ -66,8 +65,7 @@ public class FormattedEditText extends EditText {
     private String mPlaceholder;
     private String mPlaceholders;
     private int mLastIndex;
-    @Mode
-    private int mMode = MODE_SIMPLE;
+    @Mode private int mMode = MODE_SIMPLE;
     private boolean mIsFormatted = false;
     private List<TextWatcher> mWatchers;
     private String mMark;
@@ -562,8 +560,7 @@ public class FormattedEditText extends EditText {
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({MODE_SIMPLE, MODE_COMPLEX})
-    @interface Mode {
-    }
+    @interface Mode {}
 
     public interface OnClearClickListener {
         boolean onClearClick(FormattedEditText editText, Drawable drawable);

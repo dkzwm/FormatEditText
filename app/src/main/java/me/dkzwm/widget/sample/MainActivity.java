@@ -9,7 +9,6 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
-
 import me.dkzwm.widget.fet.FormattedEditText;
 
 /**
@@ -148,16 +147,18 @@ public class MainActivity extends AppCompatActivity {
                         checkSimpleValid(editTextSimple);
                     }
                 });
-        editTextSimple.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (hasFocus) {
-                    checkSimpleValid(editTextSimple);
-                } else {
-                    editTextSimple.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
-                }
-            }
-        });
+        editTextSimple.setOnFocusChangeListener(
+                new View.OnFocusChangeListener() {
+                    @Override
+                    public void onFocusChange(View v, boolean hasFocus) {
+                        if (hasFocus) {
+                            checkSimpleValid(editTextSimple);
+                        } else {
+                            editTextSimple.setCompoundDrawablesWithIntrinsicBounds(
+                                    null, null, null, null);
+                        }
+                    }
+                });
     }
 
     private void checkSimpleValid(EditText editText) {
@@ -170,8 +171,11 @@ public class MainActivity extends AppCompatActivity {
                     ContextCompat.getDrawable(MainActivity.this, R.drawable.icon_valid),
                     null);
         } else {
-            editText.setCompoundDrawablesWithIntrinsicBounds(null, null,
-                    ContextCompat.getDrawable(MainActivity.this, R.drawable.icon_invalid), null);
+            editText.setCompoundDrawablesWithIntrinsicBounds(
+                    null,
+                    null,
+                    ContextCompat.getDrawable(MainActivity.this, R.drawable.icon_invalid),
+                    null);
         }
     }
 }

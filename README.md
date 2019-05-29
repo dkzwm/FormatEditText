@@ -54,12 +54,12 @@ dependencies {
 //简单模式
 FormattedEditText editText = findViewById(R.id.formattedEditText);
 editText.setMode(FormattedEditText.MODE_SIMPLE);
-editText.setClearDrawable(ContextCompat.getDrawable(context ,R.drawable.icon_clear));
+editText.setClearDrawable(ContextCompat.getDrawable(context,R.drawable.icon_clear));
 editText.setFormatStyle("344");
 editText.setPlaceholder(" ");（输入13012345678，格式化后为:130 1234 5678）
 //组合模式
 editText.setMode(FormattedEditText.MODE_SIMPLE);
-editText.setClearDrawable(ContextCompat.getDrawable(context ,R.drawable.icon_clear));
+editText.setClearDrawable(ContextCompat.getDrawable(context,R.drawable.icon_clear));
 editText.setMark("*");
 editText.setFormatStyle("+(**)-***-****-****");（输入8613012345678，格式化后为:+(86)-130-1234-5678）
 ```
@@ -71,8 +71,7 @@ editText.setFormatStyle("+(**)-***-****-****");（输入8613012345678，格式�
 |fet_mark|string|指定标记符，仅当`fet_mode`为`MODE_COMPLEX`时需要设置，且长度必须为1（默认:`*`）|
 |fet_placeholder|string|指定占位符，仅当`fet_mode`为`MODE_SIMPLE`时需要设置，且长度必须为1（默认:` `）|
 |fet_clearDrawable|reference|指定删除图标|
-|fet_drawableGravity|enum|指定删除图标的对齐方式，支持`GRAVITY_TOP`、`GRAVITY_CENTER`、`GRAVITY_BOTTOM
-`，默认为`GRAVITY_CENTER`，即居中对齐|
+|fet_drawableGravity|enum|指定删除图标的对齐方式，支持`GRAVITY_TOP`、`GRAVITY_CENTER`、`GRAVITY_BOTTOM`，默认为`GRAVITY_CENTER`，即居中对齐|
 |fet_drawablePadding|dimension|指定删除图标的填充大小|
 
 ## License

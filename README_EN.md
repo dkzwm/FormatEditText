@@ -52,12 +52,12 @@ dependencies {
 //MODE_COMPLEX
 FormattedEditText editText = findViewById(R.id.formattedEditText);
 editText.setMode(FormattedEditText.MODE_SIMPLE);
-editText.setClearDrawable(ContextCompat.getDrawable(context ,R.drawable.icon_clear));
+editText.setClearDrawable(ContextCompat.getDrawable(context,R.drawable.icon_clear));
 editText.setFormatStyle("344");
 editText.setPlaceholder(" ");（manually enter "13012345678", then it will be formatted as "130-1234-5678"）
 //MODE_SIMPLE
 editText.setMode(FormattedEditText.MODE_SIMPLE);
-editText.setClearDrawable(ContextCompat.getDrawable(context ,R.drawable.icon_clear));
+editText.setClearDrawable(ContextCompat.getDrawable(context,R.drawable.icon_clear));
 editText.setMark("*");
 editText.setFormatStyle("+(**)-***-****-****");（manually enter "8613012345678"，then it will be formatted as "+(86)-130-1234-5678"）
 ```

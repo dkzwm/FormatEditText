@@ -9,6 +9,7 @@ FormatEditText可以用来当做号码格式化文本输入框使用, 可以用�
  - 支持配置格式化样式
  - 支持粘贴且光标自动跟随
  - 自动填充删除占位符
+ - 支持配置清除图标且不会占用CompoundDrawables的位置
 
 ## 演示程序
 下载 [Demo.apk](https://raw.githubusercontent.com/dkzwm/FormatEditText/master/demo/demo.apk)    
@@ -18,9 +19,9 @@ FormatEditText可以用来当做号码格式化文本输入框使用, 可以用�
 添加如下依赖到你的 build.gradle 文件:
 ```
 dependencies {
-    implementation 'me.dkzwm.widget.fet:core:0.0.7'
+    implementation 'me.dkzwm.widget.fet:core:0.0.8'
     AndroidX Kotlin版本
-    implementation 'me.dkzwm.widget.fet:core:0.0.7.androidxKT'
+    implementation 'me.dkzwm.widget.fet:core:0.0.8.androidxKT'
 }
 ```
 ## 使用
@@ -30,6 +31,9 @@ dependencies {
 <me.dkzwm.widget.fet.FormattedEditText
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    app:fet_clearDrawable="@drawable/icon_clear"
+    app:fet_drawableGravity="fet_center"
+    app:fet_drawablePadding="4dp"
     app:fet_formatStyle="+(**)-***-****-****"
     app:fet_mark="*"
     app:fet_mode="mode_complex"/>
@@ -38,6 +42,9 @@ dependencies {
 <me.dkzwm.widget.fet.FormattedEditText
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    app:fet_clearDrawable="@drawable/icon_clear"
+    app:fet_drawableGravity="fet_center"
+    app:fet_drawablePadding="4dp"
     app:fet_formatStyle="344"
     app:fet_mode="mode_simple"
     app:fet_placeholder=" "/>
@@ -47,10 +54,12 @@ dependencies {
 //简单模式
 FormattedEditText editText = findViewById(R.id.formattedEditText);
 editText.setMode(FormattedEditText.MODE_SIMPLE);
+editText.setClearDrawable(ContextCompat.getDrawable(context ,R.drawable.icon_clear));
 editText.setFormatStyle("344");
 editText.setPlaceholder(" ");（输入13012345678，格式化后为:130 1234 5678）
 //组合模式
 editText.setMode(FormattedEditText.MODE_SIMPLE);
+editText.setClearDrawable(ContextCompat.getDrawable(context ,R.drawable.icon_clear));
 editText.setMark("*");
 editText.setFormatStyle("+(**)-***-****-****");（输入8613012345678，格式化后为:+(86)-130-1234-5678）
 ```
@@ -61,6 +70,10 @@ editText.setFormatStyle("+(**)-***-****-****");（输入8613012345678，格式�
 |fet_formatStyle|string|指定格式化样式，当`fet_mode`为`MODE_SIMPLE`时，格式只能是纯数字, `fet_mode`为`MODE_COMPLEX`时，格式为任意格式且需要指定`fet_mark`属性，如果不指定那么默认为`*`|
 |fet_mark|string|指定标记符，仅当`fet_mode`为`MODE_COMPLEX`时需要设置，且长度必须为1（默认:`*`）|
 |fet_placeholder|string|指定占位符，仅当`fet_mode`为`MODE_SIMPLE`时需要设置，且长度必须为1（默认:` `）|
+|fet_clearDrawable|reference|指定删除图标|
+|fet_drawableGravity|enum|指定删除图标的对齐方式，支持`GRAVITY_TOP`、`GRAVITY_CENTER`、`GRAVITY_BOTTOM
+`，默认为`GRAVITY_CENTER`，即居中对齐|
+|fet_drawablePadding|dimension|指定删除图标的填充大小|
 
 ## License
 	--------

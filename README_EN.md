@@ -7,6 +7,7 @@ FormatEditText can be used as a number formatted text input box, which can be us
  - Support configuration format style
  - Support paste and the cursor will auto follow
  - Automatic append or delete placeholder
+ - Support for configuration clear icon without occupying the position of CompoundDrawables
 
 ## Demo
 Download [Demo.apk](https://raw.githubusercontent.com/dkzwm/FormatEditText/master/demo/demo.apk)    
@@ -16,9 +17,9 @@ Download [Demo.apk](https://raw.githubusercontent.com/dkzwm/FormatEditText/maste
 Add the following dependency to your build.gradle file:
 ```
 dependencies {
-    implementation 'me.dkzwm.widget.fet:core:0.0.7'
+    implementation 'me.dkzwm.widget.fet:core:0.0.8'
     AndroidX Kotlin version
-    implementation 'me.dkzwm.widget.fet:core:0.0.7.androidxKT'
+    implementation 'me.dkzwm.widget.fet:core:0.0.8.androidxKT'
 }
 ```
 ## How to used
@@ -28,6 +29,9 @@ dependencies {
 <me.dkzwm.widget.fet.FormattedEditText
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    app:fet_clearDrawable="@drawable/icon_clear"
+    app:fet_drawableGravity="fet_center"
+    app:fet_drawablePadding="4dp"
     app:fet_formatStyle="+(**)-***-****-****"
     app:fet_mark="*"
     app:fet_mode="mode_complex"/>
@@ -36,6 +40,9 @@ dependencies {
 <me.dkzwm.widget.fet.FormattedEditText
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    app:fet_clearDrawable="@drawable/icon_clear"
+    app:fet_drawableGravity="fet_center"
+    app:fet_drawablePadding="4dp"
     app:fet_formatStyle="344"
     app:fet_mode="mode_simple"
     app:fet_placeholder=" "/>
@@ -45,10 +52,12 @@ dependencies {
 //MODE_COMPLEX
 FormattedEditText editText = findViewById(R.id.formattedEditText);
 editText.setMode(FormattedEditText.MODE_SIMPLE);
+editText.setClearDrawable(ContextCompat.getDrawable(context ,R.drawable.icon_clear));
 editText.setFormatStyle("344");
 editText.setPlaceholder(" ");（manually enter "13012345678", then it will be formatted as "130-1234-5678"）
 //MODE_SIMPLE
 editText.setMode(FormattedEditText.MODE_SIMPLE);
+editText.setClearDrawable(ContextCompat.getDrawable(context ,R.drawable.icon_clear));
 editText.setMark("*");
 editText.setFormatStyle("+(**)-***-****-****");（manually enter "8613012345678"，then it will be formatted as "+(86)-130-1234-5678"）
 ```
@@ -59,6 +68,9 @@ editText.setFormatStyle("+(**)-***-****-****");（manually enter "8613012345678"
 |fet_formatStyle|string|Set the format style，When `fet_mode` is `MODE_SIMPLE`, the format can only be a pure number. When `fet_mode` is `MODE_COMPLEX`, the format is an arbitrary format and the `fet_mark` attribute needs to be specified. If not specified then the default is `*`|
 |fet_mark|string|Set the mark，Only set when `fet_mode` is `MODE_COMPLEX`, and the length must be 1 (default: `*`)|
 |fet_placeholder|string|Set the placeholder，Only set when `fet_mode` is `MODE_SIMPLE`, and the length must be 1 (default: ` `)|
+|fet_clearDrawable|reference|Set the clear icon|
+|fet_drawableGravity|enum|Set the gravity of clear icon，support `GRAVITY_TOP`、`GRAVITY_CENTER`、`GRAVITY_BOTTOM`，(default`GRAVITY_CENTER`)|
+|fet_drawablePadding|dimension|Set the padding of clear icon|
 
 ## License
 	--------

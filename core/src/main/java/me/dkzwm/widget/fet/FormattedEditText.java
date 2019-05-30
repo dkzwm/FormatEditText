@@ -41,6 +41,7 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.ViewConfiguration;
 import android.widget.EditText;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
@@ -65,7 +66,8 @@ public class FormattedEditText extends EditText {
     private String mPlaceholder;
     private String mPlaceholders;
     private int mLastIndex;
-    @Mode private int mMode = MODE_SIMPLE;
+    @Mode
+    private int mMode = MODE_SIMPLE;
     private boolean mIsFormatted = false;
     private List<TextWatcher> mWatchers;
     private String mMark;
@@ -139,28 +141,7 @@ public class FormattedEditText extends EditText {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        if (mClearDrawable != null) {
-            final int top = getPaddingTop() + mDrawablePadding;
-            final int bottom = getPaddingBottom() + mDrawablePadding;
-            int width = mClearDrawable.getIntrinsicWidth();
-            int height = mClearDrawable.getIntrinsicHeight();
-            final int newRight = w - mRealPaddingRight - mDrawablePadding;
-            switch (mGravity) {
-                case GRAVITY_TOP:
-                    mClearDrawable.setBounds(newRight - width, top, newRight, top + height);
-                    break;
-                case GRAVITY_CENTER:
-                    int newTop = top + (h - top - bottom - height) / 2;
-                    mClearDrawable.setBounds(newRight - width, newTop, newRight, newTop + height);
-                    break;
-                case GRAVITY_BOTTOM:
-                default:
-                    int newBottom = h - bottom;
-                    mClearDrawable.setBounds(
-                            newRight - width, newBottom - height, newRight, newBottom);
-                    break;
-            }
-        }
+        resetClearDrawableBound();
     }
 
     @Override
@@ -215,6 +196,16 @@ public class FormattedEditText extends EditText {
         if (mClearDrawable != null)
             right += mClearDrawable.getIntrinsicWidth() + mDrawablePadding * 2;
         super.setPadding(left, top, right, bottom);
+        resetClearDrawableBound();
+    }
+
+    @Override
+    public void setPaddingRelative(int start, int top, int end, int bottom) {
+        mRealPaddingRight = end;
+        if (mClearDrawable != null)
+            end += mClearDrawable.getIntrinsicWidth() + mDrawablePadding * 2;
+        super.setPaddingRelative(start, top, end, bottom);
+        resetClearDrawableBound();
     }
 
     @Override
@@ -403,6 +394,32 @@ public class FormattedEditText extends EditText {
         return realText.toString();
     }
 
+    private void resetClearDrawableBound() {
+        if (mClearDrawable != null) {
+            final int top = getPaddingTop() + mDrawablePadding;
+            final int bottom = getPaddingBottom() + mDrawablePadding;
+            int width = mClearDrawable.getIntrinsicWidth();
+            int height = mClearDrawable.getIntrinsicHeight();
+            final int newRight = getWidth() - mRealPaddingRight - mDrawablePadding;
+            final int h = getHeight();
+            switch (mGravity) {
+                case GRAVITY_TOP:
+                    mClearDrawable.setBounds(newRight - width, top, newRight, top + height);
+                    break;
+                case GRAVITY_CENTER:
+                    int newTop = top + (h - top - bottom - height) / 2;
+                    mClearDrawable.setBounds(newRight - width, newTop, newRight, newTop + height);
+                    break;
+                case GRAVITY_BOTTOM:
+                default:
+                    int newBottom = h - bottom;
+                    mClearDrawable.setBounds(
+                            newRight - width, newBottom - height, newRight, newBottom);
+                    break;
+            }
+        }
+    }
+
     private void sendBeforeTextChanged(CharSequence s, int start, int count, int after) {
         final List<TextWatcher> list = mWatchers;
         if (list != null) {
@@ -560,7 +577,8 @@ public class FormattedEditText extends EditText {
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({MODE_SIMPLE, MODE_COMPLEX})
-    @interface Mode {}
+    @interface Mode {
+    }
 
     public interface OnClearClickListener {
         boolean onClearClick(FormattedEditText editText, Drawable drawable);

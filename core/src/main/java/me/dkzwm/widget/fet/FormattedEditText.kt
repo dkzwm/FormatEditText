@@ -115,25 +115,7 @@ class FormattedEditText : EditText {
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        val clearDrawable = mClearDrawable
-        if (clearDrawable != null) {
-            val top = paddingTop + mDrawablePadding
-            val bottom = paddingBottom + mDrawablePadding
-            val width = clearDrawable.intrinsicWidth
-            val height = clearDrawable.intrinsicHeight
-            val newRight = w - mRealPaddingRight - mDrawablePadding
-            when (mGravity) {
-                GRAVITY_TOP -> clearDrawable.setBounds(newRight - width, top, newRight, top + height)
-                GRAVITY_CENTER -> {
-                    val newTop = top + (h - top - bottom - height) / 2
-                    clearDrawable.setBounds(newRight - width, newTop, newRight, newTop + height)
-                }
-                else -> {
-                    val newBottom = h - bottom
-                    clearDrawable.setBounds(newRight - width, newBottom - height, newRight, newBottom)
-                }
-            }
-        }
+        resetClearDrawableBound()
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -187,6 +169,17 @@ class FormattedEditText : EditText {
         if (clearDrawable != null)
             newRight += clearDrawable.intrinsicWidth + mDrawablePadding * 2
         super.setPadding(left, top, newRight, bottom)
+        resetClearDrawableBound()
+    }
+
+    override fun setPaddingRelative(start: Int, top: Int, end: Int, bottom: Int) {
+        mRealPaddingRight = end
+        var newEnd = end
+        val clearDrawable = mClearDrawable
+        if (clearDrawable != null)
+            newEnd += clearDrawable.intrinsicWidth + mDrawablePadding * 2
+        super.setPaddingRelative(start, top, newEnd, bottom)
+        resetClearDrawableBound()
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -378,6 +371,29 @@ class FormattedEditText : EditText {
             realText.append(formattedText.substring(i, i + 1))
         }
         return realText.toString()
+    }
+
+    private fun resetClearDrawableBound() {
+        val clearDrawable = mClearDrawable
+        if (clearDrawable != null) {
+            val top = paddingTop + mDrawablePadding
+            val bottom = paddingBottom + mDrawablePadding
+            val width = clearDrawable.intrinsicWidth
+            val height = clearDrawable.intrinsicHeight
+            val newRight = getWidth() - mRealPaddingRight - mDrawablePadding
+            val h = getHeight()
+            when (mGravity) {
+                GRAVITY_TOP -> clearDrawable.setBounds(newRight - width, top, newRight, top + height)
+                GRAVITY_CENTER -> {
+                    val newTop = top + (h - top - bottom - height) / 2
+                    clearDrawable.setBounds(newRight - width, newTop, newRight, newTop + height)
+                }
+                else -> {
+                    val newBottom = h - bottom
+                    clearDrawable.setBounds(newRight - width, newBottom - height, newRight, newBottom)
+                }
+            }
+        }
     }
 
     private fun sendBeforeTextChanged(s: CharSequence,

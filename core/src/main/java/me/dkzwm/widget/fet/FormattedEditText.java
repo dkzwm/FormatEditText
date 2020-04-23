@@ -30,6 +30,8 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.CallSuper;
 import android.support.annotation.IntDef;
 import android.text.Editable;
@@ -75,15 +77,16 @@ public class FormattedEditText extends EditText {
     private static final char ESCAPE_CHAR = '\\';
     private int mTouchSlop;
     private Placeholder[] mHolders;
+    @Mode private int mMode = MODE_NONE;
     private char mPlaceholder = 0;
     private char mEmptyPlaceholder = 0;
     private char mMark = 0;
     private String mPlaceholders;
     private String mHintText;
+    private String mFormatStyle;
     private boolean mShowHintWhileEmpty = false;
     private int mHintColor = Color.TRANSPARENT;
     private int mLastIndex;
-    @Mode private int mMode = MODE_NONE;
     private boolean mIsFormatted = false;
     private List<TextWatcher> mWatchers;
     private Drawable mClearDrawable;
@@ -94,7 +97,7 @@ public class FormattedEditText extends EditText {
     private OnClearClickListener mClearClickListener;
     private FormattedTextWatcher mTextWatcher;
     private HookLengthFilter mHookLengthFilter;
-    private String mFormatStyle;
+    private boolean mRestoring = false;
 
     public FormattedEditText(Context context) {
         super(context);
@@ -121,7 +124,7 @@ public class FormattedEditText extends EditText {
                     context.obtainStyledAttributes(
                             attrs, R.styleable.FormattedEditText, defStyleAttr, 0);
             try {
-                @Mode int mode = ta.getInt(R.styleable.FormattedEditText_fet_mode, MODE_SIMPLE);
+                @Mode int mode = ta.getInt(R.styleable.FormattedEditText_fet_mode, MODE_NONE);
                 String mark = ta.getString(R.styleable.FormattedEditText_fet_mark);
                 int hintColor = ta.getColor(R.styleable.FormattedEditText_fet_hintTextColor, 0);
                 String placeHolder = ta.getString(R.styleable.FormattedEditText_fet_placeholder);
@@ -138,22 +141,26 @@ public class FormattedEditText extends EditText {
                 mDrawablePadding =
                         ta.getDimensionPixelSize(
                                 R.styleable.FormattedEditText_fet_drawablePadding, 0);
-                Config.create()
-                        .mode(mode)
-                        .placeholder(
-                                (placeHolder == null || placeHolder.length() == 0)
-                                        ? DEFAULT_PLACE_HOLDER
-                                        : placeHolder.charAt(0))
-                        .hintColor(hintColor)
-                        .hintText(hintText)
-                        .mark((mark == null || mark.length() == 0) ? DEFAULT_MARK : mark.charAt(0))
-                        .emptyPlaceholder(
-                                (emptyPlaceHolder == null || emptyPlaceHolder.length() == 0)
-                                        ? 0
-                                        : emptyPlaceHolder.charAt(0))
-                        .formatStyle(formatStyle)
-                        .showHintWhileEmpty(showHintWhileEmpty)
-                        .config(this);
+                setConfig(
+                        Config.create()
+                                .mode(mode)
+                                .placeholder(
+                                        (placeHolder == null || placeHolder.length() == 0)
+                                                ? DEFAULT_PLACE_HOLDER
+                                                : placeHolder.charAt(0))
+                                .hintColor(hintColor)
+                                .hintText(hintText)
+                                .mark(
+                                        (mark == null || mark.length() == 0)
+                                                ? DEFAULT_MARK
+                                                : mark.charAt(0))
+                                .emptyPlaceholder(
+                                        (emptyPlaceHolder == null || emptyPlaceHolder.length() == 0)
+                                                ? 0
+                                                : emptyPlaceHolder.charAt(0))
+                                .formatStyle(formatStyle)
+                                .showHintWhileEmpty(showHintWhileEmpty),
+                        true);
             } finally {
                 ta.recycle();
             }
@@ -386,7 +393,7 @@ public class FormattedEditText extends EditText {
         return mHintColor;
     }
 
-    private void setConfig(Config config) {
+    private void setConfig(Config config, boolean create) {
         if (config.mMode != null) {
             mMode = config.mMode;
         }
@@ -423,9 +430,6 @@ public class FormattedEditText extends EditText {
                     mEmptyPlaceholder = config.mEmptyPlaceholder;
                 }
             }
-            setText(getRealText());
-            Editable text = getText();
-            Selection.setSelection(text, text.length());
         } else if (mFormatStyle != null) {
             if (mMode == MODE_SIMPLE) {
                 if (config.mPlaceholder != null && mPlaceholder != config.mPlaceholder) {
@@ -461,12 +465,16 @@ public class FormattedEditText extends EditText {
                     mEmptyPlaceholder = config.mEmptyPlaceholder;
                 }
             }
-            setText(getRealText());
-            Editable text = getText();
-            Selection.setSelection(text, text.length());
         } else {
             throw new IllegalArgumentException("Format style can not be empty");
         }
+        if (!create) {
+            setText(getRealText());
+        } else {
+            setText(getText());
+        }
+        Editable text = getText();
+        Selection.setSelection(text, text.length());
     }
 
     private void parseSimplePlaceholders() {
@@ -527,10 +535,32 @@ public class FormattedEditText extends EditText {
     }
 
     public String getRealText() {
-        SpannableStringBuilder value = new SpannableStringBuilder(getText());
-        value.removeSpan(TextWatcher.class);
-        IPlaceholderSpan[] pSpans = value.getSpans(0, value.length(), IPlaceholderSpan.class);
-        for (IPlaceholderSpan s : pSpans) {
+        Editable editable = getText();
+        if (editable.length() == 0) {
+            return "";
+        }
+        SpannableStringBuilder value = new SpannableStringBuilder(editable);
+        IPlaceholderSpan[] spans = value.getSpans(0, value.length(), IPlaceholderSpan.class);
+        for (IPlaceholderSpan s : spans) {
+            value.delete(value.getSpanStart(s), value.getSpanEnd(s));
+        }
+        final String realText = value.toString();
+        value.clear();
+        return realText;
+    }
+
+    private String getSavedRealText() {
+        Editable editable = getText();
+        if (editable.length() == 0) {
+            return null;
+        }
+        SpannableStringBuilder value = new SpannableStringBuilder(editable);
+        IPlaceholderSpan[] spans = value.getSpans(0, value.length(), IPlaceholderSpan.class);
+        if (spans.length == 0) {
+            value.clear();
+            return null;
+        }
+        for (IPlaceholderSpan s : spans) {
             value.delete(value.getSpanStart(s), value.getSpanEnd(s));
         }
         final String realText = value.toString();
@@ -887,6 +917,62 @@ public class FormattedEditText extends EditText {
                 || mask == CHARACTER_MASK;
     }
 
+    @Override
+    public Parcelable onSaveInstanceState() {
+        int start = getSelectionStart();
+        int end = getSelectionEnd();
+        SavedState savedState = new SavedState(super.onSaveInstanceState());
+        savedState.mMode = mMode;
+        savedState.mPlaceholder = mPlaceholder;
+        savedState.mEmptyPlaceholder = mEmptyPlaceholder;
+        savedState.mMark = mMark;
+        savedState.mPlaceholders = mPlaceholders;
+        savedState.mHintText = mHintText;
+        savedState.mFormatStyle = mFormatStyle;
+        savedState.mShowHintWhileEmpty = mShowHintWhileEmpty;
+        savedState.mHintColor = mHintColor;
+        savedState.mSelectionStart = start;
+        savedState.mSelectionEnd = end;
+        savedState.mRealText = getSavedRealText();
+        return savedState;
+    }
+
+    @Override
+    public void onRestoreInstanceState(Parcelable state) {
+        if (!(state instanceof SavedState)) {
+            super.onRestoreInstanceState(state);
+            return;
+        }
+        SavedState savedState = (SavedState) state;
+        mMode = savedState.mMode;
+        mPlaceholder = savedState.mPlaceholder;
+        mEmptyPlaceholder = savedState.mEmptyPlaceholder;
+        mMark = savedState.mMark;
+        mPlaceholders = savedState.mPlaceholders;
+        mHintText = savedState.mHintText;
+        mFormatStyle = savedState.mFormatStyle;
+        mShowHintWhileEmpty = savedState.mShowHintWhileEmpty;
+        mHintColor = savedState.mHintColor;
+        if (mMode == MODE_SIMPLE) {
+            parseSimplePlaceholders();
+        } else if (mMode == MODE_COMPLEX) {
+            parseComplexPlaceholders();
+        }
+        if (!TextUtils.isEmpty(savedState.mRealText)) {
+            mRestoring = true;
+            super.onRestoreInstanceState(savedState.getSuperState());
+            mRestoring = false;
+            setText(savedState.mRealText);
+        } else {
+            super.onRestoreInstanceState(savedState.getSuperState());
+        }
+        Editable text = getText();
+        Selection.setSelection(
+                text,
+                Math.min(savedState.mSelectionStart, text.length()),
+                Math.min(savedState.mSelectionEnd, text.length()));
+    }
+
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({MODE_NONE, MODE_SIMPLE, MODE_COMPLEX, MODE_MASK, MODE_HINT})
     @interface Mode {}
@@ -972,7 +1058,69 @@ public class FormattedEditText extends EditText {
         }
 
         public void config(FormattedEditText editText) {
-            editText.setConfig(this);
+            editText.setConfig(this, false);
+        }
+    }
+
+    private static class SavedState extends BaseSavedState {
+        public static final Parcelable.Creator<SavedState> CREATOR =
+                new Parcelable.Creator<SavedState>() {
+                    public SavedState createFromParcel(Parcel in) {
+                        return new SavedState(in);
+                    }
+
+                    public SavedState[] newArray(int size) {
+                        return new SavedState[size];
+                    }
+                };
+        private int mMode = MODE_NONE;
+        private char mPlaceholder = 0;
+        private char mEmptyPlaceholder = 0;
+        private char mMark = 0;
+        private String mPlaceholders;
+        private String mHintText;
+        private String mFormatStyle;
+        private String mRealText;
+        private boolean mShowHintWhileEmpty = false;
+        private int mHintColor = Color.TRANSPARENT;
+        private int mSelectionStart;
+        private int mSelectionEnd;
+
+        SavedState(Parcelable superState) {
+            super(superState);
+        }
+
+        private SavedState(Parcel in) {
+            super(in);
+            mMode = in.readInt();
+            mPlaceholder = (char) in.readInt();
+            mEmptyPlaceholder = (char) in.readInt();
+            mMark = (char) in.readInt();
+            mRealText = in.readString();
+            mPlaceholders = in.readString();
+            mHintText = in.readString();
+            mFormatStyle = in.readString();
+            mShowHintWhileEmpty = in.readByte() != 0;
+            mHintColor = in.readInt();
+            mSelectionStart = in.readInt();
+            mSelectionEnd = in.readInt();
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            super.writeToParcel(out, flags);
+            out.writeInt(mMode);
+            out.writeInt(mPlaceholder);
+            out.writeInt(mEmptyPlaceholder);
+            out.writeInt(mMark);
+            out.writeString(mRealText);
+            out.writeString(mPlaceholders);
+            out.writeString(mHintText);
+            out.writeString(mFormatStyle);
+            out.writeByte((byte) (mShowHintWhileEmpty ? 1 : 0));
+            out.writeInt(mHintColor);
+            out.writeInt(mSelectionStart);
+            out.writeInt(mSelectionEnd);
         }
     }
 
@@ -982,6 +1130,9 @@ public class FormattedEditText extends EditText {
         @Override
         public CharSequence filter(
                 CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+            if (mRestoring) {
+                return null;
+            }
             if (mMode == MODE_SIMPLE || mMode == MODE_COMPLEX) {
                 if (mPlaceholders == null || mIsFormatted || source.length() == 0) {
                     return null;
@@ -1010,6 +1161,9 @@ public class FormattedEditText extends EditText {
         @Override
         public CharSequence filter(
                 CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+            if (mRestoring) {
+                return null;
+            }
             if (!mIsFormatted && (mMode > MODE_COMPLEX)) {
                 IEmptyPlaceholderSpan[] spans =
                         dest.getSpans(0, dest.length(), IEmptyPlaceholderSpan.class);
@@ -1025,11 +1179,17 @@ public class FormattedEditText extends EditText {
     private class FormattedTextWatcher implements TextWatcher {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            if (mRestoring) {
+                return;
+            }
             sendBeforeTextChanged(s, start, count, after);
         }
 
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
+            if (mRestoring) {
+                return;
+            }
             if (mMode == MODE_NONE || (mMode < MODE_MASK) && (mHolders == null)) {
                 sendOnTextChanged(s, start, before, count);
                 return;
@@ -1045,6 +1205,9 @@ public class FormattedEditText extends EditText {
 
         @Override
         public void afterTextChanged(Editable s) {
+            if (mRestoring) {
+                return;
+            }
             if (mMode == MODE_NONE || (mMode < MODE_MASK) && (mHolders == null)) {
                 sendAfterTextChanged(s);
             }

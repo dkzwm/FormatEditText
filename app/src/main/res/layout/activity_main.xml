@@ -1,32 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:app="http://schemas.android.com/apk/res-auto"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="vertical"
-              tools:context=".MainActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
 
     <me.dkzwm.widget.fet.FormattedEditText
         android:id="@+id/formattedEditText_complex"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:inputType="phone"
-        android:maxLength="19"
         android:padding="12dp"
         android:text="13012345678"
         android:textColor="@color/colorPrimary"
         android:textSize="16sp"
         app:fet_formatStyle="+(86)-***-****-****"
         app:fet_mark="*"
-        app:fet_mode="mode_complex"/>
+        app:fet_mode="mode_complex" />
 
     <me.dkzwm.widget.fet.FormattedEditText
         android:id="@+id/formattedEditText_simple"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="bottom"
-        android:inputType="phone"
+        android:hint="请输入电话号码"
         android:maxLength="13"
         android:padding="12dp"
         android:text="13012345678"
@@ -37,15 +36,44 @@
         app:fet_drawablePadding="4dp"
         app:fet_formatStyle="344"
         app:fet_mode="mode_simple"
-        app:fet_placeholder=" "/>
+        app:fet_placeholder=" " />
 
-    <EditText
-        android:id="@+id/editText_original"
+    <me.dkzwm.widget.fet.FormattedEditText
+        android:id="@+id/formattedEditText_mask"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="phone"
-        android:textColor="@android:color/black"
-        android:textSize="18sp"/>
+        android:gravity="bottom"
+        android:hint="请输入电话号码"
+        android:maxLength="19"
+        android:padding="12dp"
+        android:text="13012345678"
+        android:textColor="@color/colorPrimary"
+        android:textSize="16sp"
+        app:fet_clearDrawable="@drawable/icon_clear"
+        app:fet_drawableGravity="fet_center"
+        app:fet_drawablePadding="4dp"
+        app:fet_formatStyle="+(86) 000 0000 0000"
+        app:fet_showHintWhileEmpty="true"
+        app:fet_mode="mode_mask"
+        app:fet_emptyPlaceholder="_" />
+
+    <me.dkzwm.widget.fet.FormattedEditText
+        android:id="@+id/formattedEditText_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="bottom"
+        android:hint="请输入电话号码"
+        android:padding="12dp"
+        android:text="13012345678"
+        android:textColor="@color/colorPrimary"
+        android:textSize="16sp"
+        app:fet_clearDrawable="@drawable/icon_clear"
+        app:fet_drawableGravity="fet_center"
+        app:fet_drawablePadding="4dp"
+        app:fet_formatStyle="+(86) 000 0000 0000"
+        app:fet_hintText="+(86) 180 1234 5670"
+        app:fet_hintTextColor="#ff0000"
+        app:fet_mode="mode_hint" />
 
     <Button
         android:id="@+id/button_clear"
@@ -53,7 +81,7 @@
         android:layout_height="wrap_content"
         android:text="Clear"
         android:textColor="@android:color/holo_red_dark"
-        android:textSize="16sp"/>
+        android:textSize="16sp" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -65,6 +93,6 @@
             android:layout_height="wrap_content"
             android:lineSpacingExtra="3dp"
             android:textColor="@android:color/black"
-            android:textSize="16sp"/>
+            android:textSize="16sp" />
     </ScrollView>
 </LinearLayout>

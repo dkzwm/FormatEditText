@@ -9,6 +9,7 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import java.util.Locale;
 import me.dkzwm.widget.fet.FormattedEditText;
 
 /**
@@ -32,80 +33,39 @@ public class MainActivity extends AppCompatActivity {
                                 mTextViewLogs.setText("");
                             }
                         });
-        EditText editText = findViewById(R.id.editText_original);
-        editText.addTextChangedListener(
-                new TextWatcher() {
-                    @Override
-                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                        mTextViewLogs.append(
-                                "未格式化: beforeTextChanged    s:"
-                                        + s
-                                        + "   "
-                                        + "start:"
-                                        + start
-                                        + "    count:"
-                                        + count
-                                        + "   after:"
-                                        + after
-                                        + "\n");
-                    }
-
-                    @Override
-                    public void onTextChanged(CharSequence s, int start, int before, int count) {
-                        mTextViewLogs.append(
-                                "未格式化: onTextChanged    s:"
-                                        + s
-                                        + "   "
-                                        + "start:"
-                                        + start
-                                        + "    before:"
-                                        + before
-                                        + "   count:"
-                                        + count
-                                        + "\n");
-                    }
-
-                    @Override
-                    public void afterTextChanged(Editable s) {
-                        mTextViewLogs.append("未格式化: afterTextChanged    s:" + s + "\n\n");
-                    }
-                });
         final FormattedEditText editTextComplex = findViewById(R.id.formattedEditText_complex);
         editTextComplex.addTextChangedListener(
                 new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
                         mTextViewLogs.append(
-                                "复杂格式化后: beforeTextChanged    s:"
-                                        + s
-                                        + "   "
-                                        + "start:"
-                                        + start
-                                        + "    count:"
-                                        + count
-                                        + "   after:"
-                                        + after
-                                        + "\n");
+                                String.format(
+                                        Locale.CHINA,
+                                        "beforeTextChanged: s: %s, start: %d, "
+                                                + "count: %d, after: %d",
+                                        s,
+                                        start,
+                                        count,
+                                        after));
                     }
 
                     @Override
                     public void onTextChanged(CharSequence s, int start, int before, int count) {
                         mTextViewLogs.append(
-                                "复杂格式化后: onTextChanged    s:"
-                                        + s
-                                        + "   "
-                                        + "start:"
-                                        + start
-                                        + "    before:"
-                                        + before
-                                        + "   count:"
-                                        + count
-                                        + "\n");
+                                String.format(
+                                        Locale.CHINA,
+                                        "onTextChanged: s: %s, start: %d, "
+                                                + "before: %d, count: %d",
+                                        s,
+                                        start,
+                                        before,
+                                        count));
                     }
 
                     @Override
                     public void afterTextChanged(Editable s) {
-                        mTextViewLogs.append("复杂格式化后: afterTextChanged    s:" + s + "\n\n");
+                        mTextViewLogs.append(
+                                String.format(Locale.CHINA, "afterTextChanged: s: %s \n", s));
                     }
                 });
         final FormattedEditText editTextSimple = findViewById(R.id.formattedEditText_simple);

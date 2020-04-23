@@ -33,8 +33,7 @@ public class MainActivity extends AppCompatActivity {
                                 mTextViewLogs.setText("");
                             }
                         });
-        final FormattedEditText editTextComplex = findViewById(R.id.formattedEditText_complex);
-        editTextComplex.addTextChangedListener(
+        TextWatcher textWatcher =
                 new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -42,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
                                 String.format(
                                         Locale.CHINA,
                                         "beforeTextChanged: s: %s, start: %d, "
-                                                + "count: %d, after: %d",
+                                                + "count: %d, after: %d \n",
                                         s,
                                         start,
                                         count,
@@ -55,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
                                 String.format(
                                         Locale.CHINA,
                                         "onTextChanged: s: %s, start: %d, "
-                                                + "before: %d, count: %d",
+                                                + "before: %d, count: %d \n",
                                         s,
                                         start,
                                         before,
@@ -67,46 +66,11 @@ public class MainActivity extends AppCompatActivity {
                         mTextViewLogs.append(
                                 String.format(Locale.CHINA, "afterTextChanged: s: %s \n", s));
                     }
-                });
+                };
+        final FormattedEditText editTextComplex = findViewById(R.id.formattedEditText_complex);
+        editTextComplex.addTextChangedListener(textWatcher);
         final FormattedEditText editTextSimple = findViewById(R.id.formattedEditText_simple);
-        editTextSimple.addTextChangedListener(
-                new TextWatcher() {
-                    @Override
-                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                        mTextViewLogs.append(
-                                "简单格式化后: beforeTextChanged    s:"
-                                        + s
-                                        + "   "
-                                        + "start:"
-                                        + start
-                                        + "    count:"
-                                        + count
-                                        + "   after:"
-                                        + after
-                                        + "\n");
-                    }
-
-                    @Override
-                    public void onTextChanged(CharSequence s, int start, int before, int count) {
-                        mTextViewLogs.append(
-                                "简单格式化后: onTextChanged    s:"
-                                        + s
-                                        + "   "
-                                        + "start:"
-                                        + start
-                                        + "    before:"
-                                        + before
-                                        + "   count:"
-                                        + count
-                                        + "\n");
-                    }
-
-                    @Override
-                    public void afterTextChanged(Editable s) {
-                        mTextViewLogs.append("简单格式化后: afterTextChanged    s:" + s + "\n\n");
-                        checkSimpleValid(editTextSimple);
-                    }
-                });
+        editTextSimple.addTextChangedListener(textWatcher);
         editTextSimple.setOnFocusChangeListener(
                 new View.OnFocusChangeListener() {
                     @Override
@@ -119,6 +83,10 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 });
+        final FormattedEditText editTextMask = findViewById(R.id.formattedEditText_mask);
+        editTextMask.addTextChangedListener(textWatcher);
+        final FormattedEditText editTextHint = findViewById(R.id.formattedEditText_hint);
+        editTextHint.addTextChangedListener(textWatcher);
     }
 
     private void checkSimpleValid(EditText editText) {

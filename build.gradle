@@ -49,10 +49,10 @@ subprojects {
 
 ext {
     android = [
-            compileSdkVersion: 28,
-            buildToolsVersion: "28.0.3",
-            minSdkVersion    : 9,
-            targetSdkVersion : 28,
+            compileSdkVersion: 29,
+            buildToolsVersion: "29.0.3",
+            minSdkVersion    : 14,
+            targetSdkVersion : 29,
             versionCode      : 12,
             versionName      : "1.0.0"
     ]

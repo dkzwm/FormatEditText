@@ -52,28 +52,29 @@
         app:fet_clearDrawable="@drawable/icon_clear"
         app:fet_drawableGravity="fet_center"
         app:fet_drawablePadding="4dp"
+        app:fet_emptyPlaceholder="_"
         app:fet_formatStyle="+(86) 000 0000 0000"
-        app:fet_showHintWhileEmpty="true"
         app:fet_mode="mode_mask"
-        app:fet_emptyPlaceholder="_" />
+        app:fet_showHintWhileEmpty="true" />
 
     <me.dkzwm.widget.fet.FormattedEditText
         android:id="@+id/formattedEditText_hint"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="bottom"
-        android:hint="请输入电话号码"
+        android:hint="请输入身份证号码"
         android:padding="12dp"
-        android:text="13012345678"
+        android:text="510 122 1999 0101 000X"
         android:textColor="@color/colorPrimary"
         android:textSize="16sp"
         app:fet_clearDrawable="@drawable/icon_clear"
         app:fet_drawableGravity="fet_center"
         app:fet_drawablePadding="4dp"
-        app:fet_formatStyle="+(86) 000 0000 0000"
-        app:fet_hintText="+(86) 180 1234 5670"
+        app:fet_formatStyle="000 000 0000 0000 000*"
+        app:fet_hintText="510 010 2020 0101 000X"
         app:fet_hintTextColor="#ff0000"
-        app:fet_mode="mode_hint" />
+        app:fet_mode="mode_hint"
+        app:fet_showHintWhileEmpty="true" />
 
     <Button
         android:id="@+id/button_clear"

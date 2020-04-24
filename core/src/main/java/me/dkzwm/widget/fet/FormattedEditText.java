@@ -32,8 +32,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.CallSuper;
-import android.support.annotation.IntDef;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.Selection;
@@ -45,7 +43,9 @@ import android.text.style.ForegroundColorSpan;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.ViewConfiguration;
-import android.widget.EditText;
+import androidx.annotation.CallSuper;
+import androidx.annotation.IntDef;
+import androidx.appcompat.widget.AppCompatEditText;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
@@ -57,7 +57,7 @@ import java.util.List;
  *
  * @author dkzwm
  */
-public class FormattedEditText extends EditText {
+public class FormattedEditText extends AppCompatEditText {
     public static final int MODE_NONE = -1;
     public static final int MODE_SIMPLE = 0;
     public static final int MODE_COMPLEX = 1;
@@ -416,19 +416,6 @@ public class FormattedEditText extends EditText {
                 parseComplexPlaceholders();
             } else if (mMode == MODE_HINT) {
                 checkHintStyleIsRight(config.mHintText);
-                if (config.mShowHintWhileEmpty != null) {
-                    mShowHintWhileEmpty = config.mShowHintWhileEmpty;
-                }
-                if (config.mHintColor != null) {
-                    mHintColor = config.mHintColor;
-                }
-            } else {
-                if (config.mShowHintWhileEmpty != null) {
-                    mShowHintWhileEmpty = config.mShowHintWhileEmpty;
-                }
-                if (config.mEmptyPlaceholder != null) {
-                    mEmptyPlaceholder = config.mEmptyPlaceholder;
-                }
             }
         } else if (mFormatStyle != null) {
             if (mMode == MODE_SIMPLE) {
@@ -451,22 +438,18 @@ public class FormattedEditText extends EditText {
                 }
             } else if (mMode == MODE_HINT) {
                 checkHintStyleIsRight(config.mHintText);
-                if (config.mShowHintWhileEmpty != null) {
-                    mShowHintWhileEmpty = config.mShowHintWhileEmpty;
-                }
-                if (config.mHintColor != null) {
-                    mHintColor = config.mHintColor;
-                }
-            } else {
-                if (config.mShowHintWhileEmpty != null) {
-                    mShowHintWhileEmpty = config.mShowHintWhileEmpty;
-                }
-                if (config.mEmptyPlaceholder != null) {
-                    mEmptyPlaceholder = config.mEmptyPlaceholder;
-                }
             }
         } else {
             throw new IllegalArgumentException("Format style can not be empty");
+        }
+        if (config.mShowHintWhileEmpty != null) {
+            mShowHintWhileEmpty = config.mShowHintWhileEmpty;
+        }
+        if (config.mEmptyPlaceholder != null) {
+            mEmptyPlaceholder = config.mEmptyPlaceholder;
+        }
+        if (config.mHintColor != null) {
+            mHintColor = config.mHintColor;
         }
         if (!create) {
             setText(getRealText());
@@ -518,7 +501,7 @@ public class FormattedEditText extends EditText {
                 holder.index = i;
                 holder.holder = sub;
                 temp[realCount] = holder;
-                realCount++;
+                realCount += 1;
             }
         }
         if (length > 0) {
@@ -526,7 +509,7 @@ public class FormattedEditText extends EditText {
             holder.index = length;
             holder.holder = 0;
             temp[realCount] = holder;
-            realCount++;
+            realCount += 1;
         }
         mPlaceholders = builder.toString();
         mHolders = new Placeholder[realCount];
@@ -590,12 +573,12 @@ public class FormattedEditText extends EditText {
                         throw new IllegalArgumentException(
                                 "Hint text style must be conform to formatting style");
                     } else {
-                        ++indexInText;
-                        ++indexInStyle;
+                        indexInText += 1;
+                        indexInStyle += 1;
                     }
                 } else if (!nextCharIsText && charInStyle == ESCAPE_CHAR) {
                     nextCharIsText = true;
-                    ++indexInStyle;
+                    indexInStyle += 1;
                 } else {
                     char charInText = mHintText.charAt(indexInText);
                     if (charInStyle != charInText) {
@@ -603,8 +586,8 @@ public class FormattedEditText extends EditText {
                                 "Hint text style must be conform to formatting style");
                     }
                     nextCharIsText = false;
-                    ++indexInText;
-                    ++indexInStyle;
+                    indexInText += 1;
+                    indexInStyle += 1;
                 }
             }
             if (mHintText.length() != indexInText) {
@@ -695,16 +678,16 @@ public class FormattedEditText extends EditText {
                     final char place = findPlaceholder(i - 1);
                     if (sub == place) {
                         editable.delete(i - 1, i);
-                        start--;
+                        start -= 1;
                     } else {
                         break;
                     }
                 }
             }
         } else {
-            formatMask(editable, start);
+            formatMask(editable, start, true);
         }
-        final int realCount = before + (length - editable.length());
+        final int realCount = before + Math.max(length - editable.length(), 0);
         selectionStart = editable.getSpanStart(SELECTION_SPAN);
         selectionEnd = editable.getSpanEnd(SELECTION_SPAN);
         editable.removeSpan(SELECTION_SPAN);
@@ -732,12 +715,12 @@ public class FormattedEditText extends EditText {
                 formatDefined(editable, start);
             }
         } else {
-            formatMask(editable, start);
+            formatMask(editable, start, false);
         }
         selectionStart = editable.getSpanStart(SELECTION_SPAN);
         selectionEnd = editable.getSpanEnd(SELECTION_SPAN);
         editable.removeSpan(SELECTION_SPAN);
-        final int realCount = count + (length - editable.length());
+        final int realCount = count + Math.max(length - editable.length(), 0);
         editable.setFilters(filters);
         if (mHookLengthFilter != null) {
             setText(editable);
@@ -801,14 +784,14 @@ public class FormattedEditText extends EditText {
                         indexInEditable,
                         indexInEditable + 1,
                         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                indexInEditable++;
+                indexInEditable += 1;
             } else {
-                indexInEditable++;
+                indexInEditable += 1;
             }
         }
     }
 
-    private void formatMask(final Editable editable, int start) {
+    private void formatMask(final Editable editable, int start, boolean delete) {
         IPlaceholderSpan[] spans;
         if (start > 0) {
             spans = editable.getSpans(0, start, IPlaceholderSpan.class);
@@ -816,22 +799,28 @@ public class FormattedEditText extends EditText {
                 if (spans.length == start) {
                     start = 0;
                 } else {
-                    IEmptyPlaceholderSpan firstEmptySpan = null;
-                    for (IPlaceholderSpan span : spans) {
-                        if (span instanceof IEmptyPlaceholderSpan) {
-                            firstEmptySpan = (IEmptyPlaceholderSpan) span;
+                    int last = start - 1;
+                    for (int i = spans.length - 1; i >= 0; i--) {
+                        int spanStart = editable.getSpanStart(spans[i]);
+                        if (last != spanStart) {
+                            last += 1;
                             break;
                         }
+                        last = spanStart - 1;
                     }
-                    if (firstEmptySpan != null) {
-                        start = editable.getSpanStart(firstEmptySpan);
-                    }
+                    start = last;
                 }
             }
         }
         spans = editable.getSpans(start, editable.length(), IPlaceholderSpan.class);
         for (IPlaceholderSpan s : spans) {
             editable.delete(editable.getSpanStart(s), editable.getSpanEnd(s));
+        }
+        if (delete
+                && start == editable.length()
+                && ((mMode == MODE_MASK && mEmptyPlaceholder == 0)
+                        || (mMode == MODE_HINT && mHintText == null))) {
+            return;
         }
         int indexInStyle = start;
         int indexInText = start;
@@ -1105,7 +1094,7 @@ public class FormattedEditText extends EditText {
             mPlaceholders = in.readString();
             mHintText = in.readString();
             mFormatStyle = in.readString();
-            mShowHintWhileEmpty = in.readByte() != 0;
+            mShowHintWhileEmpty = in.readInt() != 0;
             mHintColor = in.readInt();
             mSelectionStart = in.readInt();
             mSelectionEnd = in.readInt();
@@ -1122,7 +1111,7 @@ public class FormattedEditText extends EditText {
             out.writeString(mPlaceholders);
             out.writeString(mHintText);
             out.writeString(mFormatStyle);
-            out.writeByte((byte) (mShowHintWhileEmpty ? 1 : 0));
+            out.writeInt(mShowHintWhileEmpty ? 1 : 0);
             out.writeInt(mHintColor);
             out.writeInt(mSelectionStart);
             out.writeInt(mSelectionEnd);

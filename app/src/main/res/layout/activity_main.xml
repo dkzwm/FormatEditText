@@ -1,90 +1,133 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".MainActivity">
-
-    <me.dkzwm.widget.fet.FormattedEditText
-        android:id="@+id/formattedEditText_complex"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="phone"
-        android:padding="12dp"
-        android:text="13012345678"
-        android:textColor="@color/colorPrimary"
-        android:textSize="16sp"
-        app:fet_formatStyle="+(86)-***-****-****"
-        app:fet_mark="*"
-        app:fet_mode="mode_complex" />
+    android:layout_marginLeft="@dimen/activity_horizontal_margin"
+    android:layout_marginTop="@dimen/activity_vertical_margin"
+    android:layout_marginRight="@dimen/activity_horizontal_margin"
+    android:layout_marginBottom="@dimen/activity_vertical_margin"
+    android:orientation="vertical">
 
     <me.dkzwm.widget.fet.FormattedEditText
         android:id="@+id/formattedEditText_simple"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="bottom"
-        android:hint="请输入电话号码"
+        android:hint="@string/please_input_phone_number"
+        android:inputType="phone"
         android:maxLength="13"
         android:padding="12dp"
         android:text="13012345678"
-        android:textColor="@color/colorPrimary"
+        android:textColor="@android:color/black"
         android:textSize="16sp"
         app:fet_clearDrawable="@drawable/icon_clear"
         app:fet_drawableGravity="fet_center"
         app:fet_drawablePadding="4dp"
         app:fet_formatStyle="344"
         app:fet_mode="mode_simple"
-        app:fet_placeholder=" " />
+        app:fet_placeholder="-" />
+
+    <TextView
+        android:id="@+id/textView_simple"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:text="@string/mode_simple_desc"
+        android:textSize="12sp" />
+
+    <me.dkzwm.widget.fet.FormattedEditText
+        android:id="@+id/formattedEditText_complex"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/please_input_phone_number"
+        android:inputType="phone"
+        android:maxLength="22"
+        android:padding="12dp"
+        android:text="13012345678"
+        android:textColor="@android:color/black"
+        android:textSize="16sp"
+        app:fet_formatStyle="+(86)-***-****-****"
+        app:fet_mark="*"
+        app:fet_mode="mode_complex" />
+
+    <TextView
+        android:id="@+id/textView_complex"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:text="@string/mode_complex_desc"
+        android:textSize="12sp" />
 
     <me.dkzwm.widget.fet.FormattedEditText
         android:id="@+id/formattedEditText_mask"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="bottom"
-        android:hint="请输入电话号码"
+        android:hint="@string/please_input_phone_number"
+        android:inputType="phone"
         android:maxLength="19"
         android:padding="12dp"
         android:text="13012345678"
-        android:textColor="@color/colorPrimary"
+        android:textColor="@android:color/black"
         android:textSize="16sp"
         app:fet_clearDrawable="@drawable/icon_clear"
         app:fet_drawableGravity="fet_center"
         app:fet_drawablePadding="4dp"
         app:fet_emptyPlaceholder="_"
-        app:fet_formatStyle="+(86) 000 0000 0000"
+        app:fet_formatStyle="+(86)-000-0000-0000"
         app:fet_mode="mode_mask"
         app:fet_showHintWhileEmpty="true" />
+
+    <TextView
+        android:id="@+id/textView_mask"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:text="@string/mode_mask_desc"
+        android:textSize="12sp" />
 
     <me.dkzwm.widget.fet.FormattedEditText
         android:id="@+id/formattedEditText_hint"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:digits="0123456789X"
         android:gravity="bottom"
-        android:hint="请输入身份证号码"
+        android:hint="@string/please_input_identity_number"
+        android:maxLength="22"
         android:padding="12dp"
         android:text="510 122 1999 0101 000X"
-        android:textColor="@color/colorPrimary"
+        android:textColor="@android:color/black"
         android:textSize="16sp"
         app:fet_clearDrawable="@drawable/icon_clear"
         app:fet_drawableGravity="fet_center"
         app:fet_drawablePadding="4dp"
         app:fet_formatStyle="000 000 0000 0000 000*"
-        app:fet_hintText="510 010 2020 0101 000X"
-        app:fet_hintTextColor="#ff0000"
+        app:fet_hintText="100 000 2020 0101 000X"
         app:fet_mode="mode_hint"
         app:fet_showHintWhileEmpty="true" />
+
+    <TextView
+        android:id="@+id/textView_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:text="@string/mode_mask_desc"
+        android:textSize="12sp" />
 
     <Button
         android:id="@+id/button_clear"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Clear"
+        android:text="@string/clear_logs"
         android:textColor="@android:color/holo_red_dark"
         android:textSize="16sp" />
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -95,5 +138,5 @@
             android:lineSpacingExtra="3dp"
             android:textColor="@android:color/black"
             android:textSize="16sp" />
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 </LinearLayout>

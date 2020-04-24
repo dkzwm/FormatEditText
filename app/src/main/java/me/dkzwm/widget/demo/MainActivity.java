@@ -33,44 +33,57 @@ public class MainActivity extends AppCompatActivity {
                                 mTextViewLogs.setText("");
                             }
                         });
-        TextWatcher textWatcher =
+        final TextView textViewSimple = findViewById(R.id.textView_simple);
+        final FormattedEditText editTextSimple = findViewById(R.id.formattedEditText_simple);
+        editTextSimple.addTextChangedListener(
                 new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                        mTextViewLogs.append(
-                                String.format(
-                                        Locale.CHINA,
-                                        "beforeTextChanged: s: %s, start: %d, "
-                                                + "count: %d, after: %d \n",
-                                        s,
-                                        start,
-                                        count,
-                                        after));
+                        appendBeforeTextChangedLog(s, start, count, after);
                     }
 
                     @Override
                     public void onTextChanged(CharSequence s, int start, int before, int count) {
-                        mTextViewLogs.append(
-                                String.format(
-                                        Locale.CHINA,
-                                        "onTextChanged: s: %s, start: %d, "
-                                                + "before: %d, count: %d \n",
-                                        s,
-                                        start,
-                                        before,
-                                        count));
+                        appendOnTextChangedLog(s, start, before, count);
                     }
 
                     @Override
                     public void afterTextChanged(Editable s) {
-                        mTextViewLogs.append(
-                                String.format(Locale.CHINA, "afterTextChanged: s: %s \n", s));
+                        appendAfterTextChangedLog(s);
+                        textViewSimple.setText(
+                                String.format(
+                                        getString(R.string.mode_simple_desc),
+                                        editTextSimple.getRealText()));
                     }
-                };
+                });
+        textViewSimple.setText(
+                String.format(getString(R.string.mode_simple_desc), editTextSimple.getRealText()));
+        final TextView textViewComplex = findViewById(R.id.textView_complex);
         final FormattedEditText editTextComplex = findViewById(R.id.formattedEditText_complex);
-        editTextComplex.addTextChangedListener(textWatcher);
-        final FormattedEditText editTextSimple = findViewById(R.id.formattedEditText_simple);
-        editTextSimple.addTextChangedListener(textWatcher);
+        editTextComplex.addTextChangedListener(
+                new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                        appendBeforeTextChangedLog(s, start, count, after);
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        appendOnTextChangedLog(s, start, before, count);
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        appendAfterTextChangedLog(s);
+                        textViewComplex.setText(
+                                String.format(
+                                        getString(R.string.mode_complex_desc),
+                                        editTextComplex.getRealText()));
+                    }
+                });
+        textViewComplex.setText(
+                String.format(
+                        getString(R.string.mode_complex_desc), editTextComplex.getRealText()));
         editTextSimple.setOnFocusChangeListener(
                 new View.OnFocusChangeListener() {
                     @Override
@@ -83,10 +96,56 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 });
+        final TextView textViewMask = findViewById(R.id.textView_mask);
         final FormattedEditText editTextMask = findViewById(R.id.formattedEditText_mask);
-        editTextMask.addTextChangedListener(textWatcher);
+        editTextMask.addTextChangedListener(
+                new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                        appendBeforeTextChangedLog(s, start, count, after);
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        appendOnTextChangedLog(s, start, before, count);
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        appendAfterTextChangedLog(s);
+                        textViewMask.setText(
+                                String.format(
+                                        getString(R.string.mode_mask_desc),
+                                        editTextMask.getRealText()));
+                    }
+                });
+        textViewMask.setText(
+                String.format(getString(R.string.mode_mask_desc), editTextMask.getRealText()));
+        final TextView textViewHint = findViewById(R.id.textView_hint);
         final FormattedEditText editTextHint = findViewById(R.id.formattedEditText_hint);
-        editTextHint.addTextChangedListener(textWatcher);
+        editTextHint.addTextChangedListener(
+                new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                        appendBeforeTextChangedLog(s, start, count, after);
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        appendOnTextChangedLog(s, start, before, count);
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        appendAfterTextChangedLog(s);
+                        textViewHint.setText(
+                                String.format(
+                                        getString(R.string.mode_hint_desc),
+                                        editTextHint.getRealText()));
+                    }
+                });
+        textViewHint.setText(
+                String.format(getString(R.string.mode_hint_desc), editTextHint.getRealText()));
     }
 
     private void checkSimpleValid(EditText editText) {
@@ -105,5 +164,31 @@ public class MainActivity extends AppCompatActivity {
                     ContextCompat.getDrawable(MainActivity.this, R.drawable.icon_invalid),
                     null);
         }
+    }
+
+    private void appendBeforeTextChangedLog(CharSequence s, int start, int count, int after) {
+        mTextViewLogs.append(
+                String.format(
+                        Locale.getDefault(),
+                        "beforeTextChanged: s: %s, start: %d, count: %d, after: %d \n",
+                        s,
+                        start,
+                        count,
+                        after));
+    }
+
+    private void appendOnTextChangedLog(CharSequence s, int start, int before, int count) {
+        mTextViewLogs.append(
+                String.format(
+                        Locale.getDefault(),
+                        "onTextChanged: s: %s, start: %d, before: %d, count: %d \n",
+                        s,
+                        start,
+                        before,
+                        count));
+    }
+
+    private void appendAfterTextChangedLog(Editable s) {
+        mTextViewLogs.append(String.format(Locale.getDefault(), "afterTextChanged: s: %s \n", s));
     }
 }

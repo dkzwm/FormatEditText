@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">FormatEditText</string>
-    <string name="please_input_phone_number">Please input phone number</string>
-    <string name="please_input_identity_number">Please input identity number</string>
+    <string name="please_input_phone_number">请输入电话号码</string>
+    <string name="please_input_identity_number">请输入身份证号码</string>
     <string name="mode_simple_desc">FormatStyle: 334, Placeholder: -, RealText: %s</string>
     <string name="mode_complex_desc">FormatStyle: +(86)-***-****-****, Mark: *, RealText:
         %s</string>
@@ -9,5 +9,5 @@
         RealText: %s</string>
     <string name="mode_hint_desc">FormatStyle: 000 000 0000 0000 000*, HintText: 100 000 2020 0101 000X,
         RealText: %s</string>
-    <string name="clear_logs">Clear Logs</string>
+    <string name="clear_logs">清除日志</string>
 </resources>

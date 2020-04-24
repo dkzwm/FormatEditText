@@ -535,30 +535,35 @@ public class FormattedEditText extends EditText {
     }
 
     public String getRealText() {
+        return getRealText(false);
+    }
+
+    private String getRealText(boolean saved) {
+        if (mMode == MODE_NONE) {
+            return "";
+        }
         Editable editable = getText();
         if (editable.length() == 0) {
             return "";
         }
         SpannableStringBuilder value = new SpannableStringBuilder(editable);
-        IPlaceholderSpan[] spans = value.getSpans(0, value.length(), IPlaceholderSpan.class);
-        for (IPlaceholderSpan s : spans) {
-            value.delete(value.getSpanStart(s), value.getSpanEnd(s));
+        IPlaceholderSpan[] spans;
+        if (mMode < MODE_MASK) {
+            spans =
+                    value.getSpans(
+                            0,
+                            Math.min(value.length(), mHolders[mHolders.length - 1].index),
+                            IPlaceholderSpan.class);
+        } else {
+            spans =
+                    value.getSpans(
+                            0,
+                            Math.min(value.length(), mFormatStyle.length()),
+                            IPlaceholderSpan.class);
         }
-        final String realText = value.toString();
-        value.clear();
-        return realText;
-    }
-
-    private String getSavedRealText() {
-        Editable editable = getText();
-        if (editable.length() == 0) {
-            return null;
-        }
-        SpannableStringBuilder value = new SpannableStringBuilder(editable);
-        IPlaceholderSpan[] spans = value.getSpans(0, value.length(), IPlaceholderSpan.class);
-        if (spans.length == 0) {
+        if (saved && spans.length == 0) {
             value.clear();
-            return null;
+            return "";
         }
         for (IPlaceholderSpan s : spans) {
             value.delete(value.getSpanStart(s), value.getSpanEnd(s));
@@ -933,7 +938,7 @@ public class FormattedEditText extends EditText {
         savedState.mHintColor = mHintColor;
         savedState.mSelectionStart = start;
         savedState.mSelectionEnd = end;
-        savedState.mRealText = getSavedRealText();
+        savedState.mRealText = getRealText(true);
         return savedState;
     }
 

@@ -98,6 +98,7 @@ public class FormattedEditText extends AppCompatEditText {
     private FormattedTextWatcher mTextWatcher;
     private HookLengthFilter mHookLengthFilter;
     private boolean mRestoring = false;
+    private boolean mFilterRestoreTextChangeEvent = false;
 
     public FormattedEditText(Context context) {
         super(context);
@@ -526,7 +527,7 @@ public class FormattedEditText extends AppCompatEditText {
             return "";
         }
         Editable editable = getText();
-        if (editable.length() == 0) {
+        if (editable == null || editable.length() == 0) {
             return "";
         }
         SpannableStringBuilder value = new SpannableStringBuilder(editable);
@@ -549,7 +550,8 @@ public class FormattedEditText extends AppCompatEditText {
             return "";
         }
         for (IPlaceholderSpan s : spans) {
-            value.delete(value.getSpanStart(s), value.getSpanEnd(s));
+            int startSpan = value.getSpanStart(s);
+            value.delete(startSpan, startSpan + 1);
         }
         final String realText = value.toString();
         value.clear();
@@ -661,10 +663,10 @@ public class FormattedEditText extends AppCompatEditText {
 
     private void formatTextWhenDelete(final Editable editable, int start, int before) {
         mIsFormatted = true;
+        super.removeTextChangedListener(mTextWatcher);
         final int length = editable.length();
         InputFilter[] filters = editable.getFilters();
         editable.setFilters(EMPTY_FILTERS);
-        super.removeTextChangedListener(mTextWatcher);
         int selectionStart = Selection.getSelectionStart(editable);
         int selectionEnd = Selection.getSelectionEnd(editable);
         editable.setSpan(SELECTION_SPAN, selectionStart, selectionEnd, Spanned.SPAN_MARK_MARK);
@@ -702,13 +704,17 @@ public class FormattedEditText extends AppCompatEditText {
 
     private void formatTextWhenAppend(final Editable editable, int start, int count) {
         mIsFormatted = true;
+        final boolean filter = mFilterRestoreTextChangeEvent;
+        super.removeTextChangedListener(mTextWatcher);
         final int length = editable.length();
         InputFilter[] filters = editable.getFilters();
         editable.setFilters(EMPTY_FILTERS);
-        super.removeTextChangedListener(mTextWatcher);
-        int selectionStart = Selection.getSelectionStart(editable);
-        int selectionEnd = Selection.getSelectionEnd(editable);
-        editable.setSpan(SELECTION_SPAN, selectionStart, selectionEnd, Spanned.SPAN_MARK_MARK);
+        int selectionStart, selectionEnd;
+        if (!filter) {
+            selectionStart = Selection.getSelectionStart(editable);
+            selectionEnd = Selection.getSelectionEnd(editable);
+            editable.setSpan(SELECTION_SPAN, selectionStart, selectionEnd, Spanned.SPAN_MARK_MARK);
+        }
         if (mMode < MODE_MASK) {
             boolean appendedLast = start > mHolders[mHolders.length - 1].index;
             if (!appendedLast) {
@@ -717,21 +723,25 @@ public class FormattedEditText extends AppCompatEditText {
         } else {
             formatMask(editable, start, false);
         }
-        selectionStart = editable.getSpanStart(SELECTION_SPAN);
-        selectionEnd = editable.getSpanEnd(SELECTION_SPAN);
-        editable.removeSpan(SELECTION_SPAN);
-        final int realCount = count + Math.max(length - editable.length(), 0);
-        editable.setFilters(filters);
-        if (mHookLengthFilter != null) {
-            setText(editable);
+        if (!filter) {
+            selectionStart = editable.getSpanStart(SELECTION_SPAN);
+            selectionEnd = editable.getSpanEnd(SELECTION_SPAN);
+            editable.removeSpan(SELECTION_SPAN);
+            final int realCount = count + Math.max(length - editable.length(), 0);
+            editable.setFilters(filters);
+            if (mHookLengthFilter != null) {
+                setText(editable);
+            }
+            Editable text = getText();
+            Selection.setSelection(
+                    text,
+                    Math.min(selectionStart, text.length()),
+                    Math.min(selectionEnd, text.length()));
+            sendOnTextChanged(text, selectionStart, 0, realCount);
+            sendAfterTextChanged(text);
+        } else {
+            editable.setFilters(filters);
         }
-        Editable text = getText();
-        Selection.setSelection(
-                text,
-                Math.min(selectionStart, text.length()),
-                Math.min(selectionEnd, text.length()));
-        sendOnTextChanged(text, selectionStart, 0, realCount);
-        sendAfterTextChanged(text);
         mIsFormatted = false;
         super.addTextChangedListener(mTextWatcher);
     }
@@ -768,7 +778,8 @@ public class FormattedEditText extends AppCompatEditText {
         IPlaceholderSpan[] spans =
                 editable.getSpans(start, editable.length(), IPlaceholderSpan.class);
         for (IPlaceholderSpan s : spans) {
-            editable.delete(editable.getSpanStart(s), editable.getSpanEnd(s));
+            int spanStart = editable.getSpanStart(s);
+            editable.delete(spanStart, spanStart + 1);
         }
         int indexInEditable = start;
         final int maxPos = mHolders[mHolders.length - 1].index;
@@ -814,7 +825,8 @@ public class FormattedEditText extends AppCompatEditText {
         }
         spans = editable.getSpans(start, editable.length(), IPlaceholderSpan.class);
         for (IPlaceholderSpan s : spans) {
-            editable.delete(editable.getSpanStart(s), editable.getSpanEnd(s));
+            int spanStart = editable.getSpanStart(s);
+            editable.delete(spanStart, spanStart + 1);
         }
         if (delete
                 && start == editable.length()
@@ -956,15 +968,17 @@ public class FormattedEditText extends AppCompatEditText {
             mRestoring = true;
             super.onRestoreInstanceState(savedState.getSuperState());
             mRestoring = false;
+            mFilterRestoreTextChangeEvent = true;
             setText(savedState.mRealText);
+            mFilterRestoreTextChangeEvent = false;
+            Editable text = getText();
+            Selection.setSelection(
+                    text,
+                    Math.min(savedState.mSelectionStart, text.length()),
+                    Math.min(savedState.mSelectionEnd, text.length()));
         } else {
             super.onRestoreInstanceState(savedState.getSuperState());
         }
-        Editable text = getText();
-        Selection.setSelection(
-                text,
-                Math.min(savedState.mSelectionStart, text.length()),
-                Math.min(savedState.mSelectionEnd, text.length()));
     }
 
     @Retention(RetentionPolicy.SOURCE)
@@ -1173,7 +1187,7 @@ public class FormattedEditText extends AppCompatEditText {
     private class FormattedTextWatcher implements TextWatcher {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            if (mRestoring) {
+            if (mRestoring || mFilterRestoreTextChangeEvent) {
                 return;
             }
             sendBeforeTextChanged(s, start, count, after);

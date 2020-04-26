@@ -838,6 +838,12 @@ public class FormattedEditText extends AppCompatEditText {
         if (spans.length > 0) {
             if (spans.length == editable.length() - start) {
                 editable.delete(start, editable.length());
+                if (start == 0
+                                && (mMode == MODE_MASK
+                                        && (mShowHintWhileEmpty || mEmptyPlaceholder == 0))
+                        || (mMode == MODE_HINT && (mShowHintWhileEmpty || mHintText == null))) {
+                    return;
+                }
             } else {
                 clearNonEmptySpans(editable, spans);
             }
@@ -851,16 +857,11 @@ public class FormattedEditText extends AppCompatEditText {
         int indexInStyle = start;
         int indexInText = start;
         boolean nextCharIsText = false;
-        boolean clearText = start == 0;
         final int styleLength = mFormatStyle.length();
         while (indexInStyle < styleLength) {
             char charInStyle = mFormatStyle.charAt(indexInStyle);
             if (!nextCharIsText && isMaskChar(charInStyle)) {
                 if (indexInText >= editable.length()) {
-                    if (clearText && mShowHintWhileEmpty) {
-                        editable.clear();
-                        break;
-                    }
                     if (mMode == MODE_MASK) {
                         if (mEmptyPlaceholder != 0) {
                             editable.insert(indexInText, String.valueOf(mEmptyPlaceholder));
@@ -872,17 +873,10 @@ public class FormattedEditText extends AppCompatEditText {
                             indexInText += 1;
                             indexInStyle += 1;
                         } else {
-                            if (clearText) {
-                                editable.clear();
-                                break;
-                            }
                             break;
                         }
                     } else {
-                        if (mHintText == null) {
-                            if (clearText) {
-                                editable.clear();
-                            }
+                        if (mHintText==null){
                             break;
                         }
                         editable.insert(
@@ -901,7 +895,6 @@ public class FormattedEditText extends AppCompatEditText {
                 } else if (isMismatchMask(charInStyle, editable.charAt(indexInText))) {
                     editable.delete(indexInText, indexInText + 1);
                 } else {
-                    clearText = false;
                     indexInText += 1;
                     indexInStyle += 1;
                 }

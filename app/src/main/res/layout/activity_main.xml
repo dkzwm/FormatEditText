@@ -43,11 +43,14 @@
         android:layout_height="wrap_content"
         android:hint="@string/please_input_phone_number"
         android:inputType="phone"
-        android:maxLength="22"
+        android:maxLength="19"
         android:padding="12dp"
         android:text="13012345678"
         android:textColor="@android:color/black"
         android:textSize="16sp"
+        app:fet_clearDrawable="@drawable/icon_clear"
+        app:fet_drawableGravity="fet_center"
+        app:fet_drawablePadding="4dp"
         app:fet_formatStyle="+(86)-***-****-****"
         app:fet_mark="*"
         app:fet_mode="mode_complex" />
@@ -76,7 +79,6 @@
         app:fet_clearDrawable="@drawable/icon_clear"
         app:fet_drawableGravity="fet_center"
         app:fet_drawablePadding="4dp"
-        app:fet_emptyPlaceholder="_"
         app:fet_formatStyle="+(86)-000-0000-0000"
         app:fet_mode="mode_mask"
         app:fet_showHintWhileEmpty="true" />
@@ -108,7 +110,7 @@
         app:fet_formatStyle="000 000 0000 0000 000*"
         app:fet_hintText="100 000 2020 0101 000X"
         app:fet_mode="mode_hint"
-        app:fet_showHintWhileEmpty="true" />
+        app:fet_showHintWhileEmpty="false" />
 
     <TextView
         android:id="@+id/textView_hint"

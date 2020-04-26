@@ -37,6 +37,7 @@ import android.text.InputFilter;
 import android.text.Selection;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.SpannedString;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
@@ -69,6 +70,7 @@ public class FormattedEditText extends AppCompatEditText {
     public static final int GRAVITY_BOTTOM = 2;
     private static final Object SELECTION_SPAN = new Object();
     private static final InputFilter[] EMPTY_FILTERS = new InputFilter[0];
+    private static final Spanned EMPTY_SPANNED = new SpannedString("");
     private static final char DEFAULT_PLACE_HOLDER = ' ';
     private static final char DEFAULT_MARK = '*';
     private static final char DIGIT_MASK = '0';
@@ -97,7 +99,7 @@ public class FormattedEditText extends AppCompatEditText {
     private float[] mDownPoint = new float[2];
     private OnClearClickListener mClearClickListener;
     private FormattedTextWatcher mTextWatcher;
-    private HookLengthFilter mHookLengthFilter;
+    private LengthFilterDelegate mLengthFilterDelegate;
     private boolean mRestoring = false;
     private boolean mFilterRestoreTextChangeEvent = false;
     private PlaceholderComparator mComparator = new PlaceholderComparator();
@@ -349,8 +351,8 @@ public class FormattedEditText extends AppCompatEditText {
         boolean havingFilter = false;
         for (int i = 0; i < filters.length; i++) {
             if (filters[i] instanceof InputFilter.LengthFilter) {
-                mHookLengthFilter = new HookLengthFilter(filters[i]);
-                filters[i] = mHookLengthFilter;
+                mLengthFilterDelegate = new LengthFilterDelegate(filters[i]);
+                filters[i] = mLengthFilterDelegate;
             } else if (filters[i] instanceof PlaceholderFilter) {
                 havingFilter = true;
             }
@@ -685,14 +687,13 @@ public class FormattedEditText extends AppCompatEditText {
         mIsFormatted = true;
         final boolean filter = mFilterRestoreTextChangeEvent;
         super.removeTextChangedListener(mTextWatcher);
-        final int length = editable.length();
+        final int length = editable.length() + before;
         InputFilter[] filters = editable.getFilters();
         editable.setFilters(EMPTY_FILTERS);
         int selectionStart, selectionEnd;
         if (!filter) {
             selectionStart = Selection.getSelectionStart(editable);
             selectionEnd = Selection.getSelectionEnd(editable);
-            Selection.removeSelection(editable);
             editable.setSpan(SELECTION_SPAN, selectionStart, selectionEnd, Spanned.SPAN_MARK_MARK);
         }
         if (mMode < MODE_MASK) {
@@ -715,13 +716,13 @@ public class FormattedEditText extends AppCompatEditText {
             formatMask(editable, start, true);
         }
         if (!filter) {
-            final int realCount = before + Math.max(length - editable.length(), 0);
             selectionStart = editable.getSpanStart(SELECTION_SPAN);
             selectionEnd = editable.getSpanEnd(SELECTION_SPAN);
             editable.removeSpan(SELECTION_SPAN);
             editable.setFilters(filters);
             Editable text = getText();
             Selection.setSelection(text, selectionStart, selectionEnd);
+            final int realCount = Math.max(length - editable.length(), 0);
             sendOnTextChanged(text, selectionStart, realCount, 0);
             sendAfterTextChanged(text);
         } else {
@@ -735,14 +736,13 @@ public class FormattedEditText extends AppCompatEditText {
         mIsFormatted = true;
         final boolean filter = mFilterRestoreTextChangeEvent;
         super.removeTextChangedListener(mTextWatcher);
-        final int length = editable.length();
+        final int length = editable.length() - count;
         InputFilter[] filters = editable.getFilters();
         editable.setFilters(EMPTY_FILTERS);
         int selectionStart, selectionEnd;
         if (!filter) {
             selectionStart = Selection.getSelectionStart(editable);
             selectionEnd = Selection.getSelectionEnd(editable);
-            Selection.removeSelection(editable);
             editable.setSpan(SELECTION_SPAN, selectionStart, selectionEnd, Spanned.SPAN_MARK_MARK);
         }
         if (mMode < MODE_MASK) {
@@ -757,18 +757,22 @@ public class FormattedEditText extends AppCompatEditText {
             selectionStart = editable.getSpanStart(SELECTION_SPAN);
             selectionEnd = editable.getSpanEnd(SELECTION_SPAN);
             editable.removeSpan(SELECTION_SPAN);
-            final int realCount = count + Math.max(length - editable.length(), 0);
             editable.setFilters(filters);
-            if (mHookLengthFilter != null) {
-                setText(editable);
+            if (mLengthFilterDelegate != null) {
+                CharSequence out =
+                        mLengthFilterDelegate.mFilter.filter(
+                                editable, 0, editable.length(), EMPTY_SPANNED, 0, 0);
+                if (out != null) {
+                    editable.delete(out.length(), editable.length());
+                }
             }
-            Editable text = getText();
             Selection.setSelection(
-                    text,
-                    Math.min(selectionStart, text.length()),
-                    Math.min(selectionEnd, text.length()));
-            sendOnTextChanged(text, selectionStart, 0, realCount);
-            sendAfterTextChanged(text);
+                    editable,
+                    Math.min(selectionStart, editable.length()),
+                    Math.min(selectionEnd, editable.length()));
+            final int realCount = Math.max(editable.length() - length, 0);
+            sendOnTextChanged(editable, selectionStart, 0, realCount);
+            sendAfterTextChanged(editable);
         } else {
             editable.setFilters(filters);
         }
@@ -1230,10 +1234,10 @@ public class FormattedEditText extends AppCompatEditText {
         }
     }
 
-    private class HookLengthFilter implements InputFilter {
+    private class LengthFilterDelegate implements InputFilter {
         private InputFilter mFilter;
 
-        private HookLengthFilter(InputFilter filter) {
+        private LengthFilterDelegate(InputFilter filter) {
             mFilter = filter;
         }
 
@@ -1243,7 +1247,7 @@ public class FormattedEditText extends AppCompatEditText {
             if (mRestoring) {
                 return null;
             }
-            if (!mIsFormatted && (mMode > MODE_COMPLEX)) {
+            if (!mIsFormatted && (mMode >= MODE_MASK)) {
                 IEmptyPlaceholderSpan[] spans =
                         dest.getSpans(0, dest.length(), IEmptyPlaceholderSpan.class);
                 if (spans.length == 0) {

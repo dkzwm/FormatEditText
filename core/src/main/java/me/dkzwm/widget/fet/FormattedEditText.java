@@ -553,11 +553,14 @@ public class FormattedEditText extends AppCompatEditText {
                             Math.min(value.length(), mFormatStyle.length()),
                             IPlaceholderSpan.class);
         }
-        if (saved && spans.length == 0) {
-            value.clear();
-            return "";
+        if (spans.length == 0) {
+            if (saved) {
+                value.clear();
+                return "";
+            }
+        } else {
+            clearNonEmptySpans(value, spans);
         }
-        clearNonEmptySpans(editable, spans);
         final String realText = value.toString();
         value.clear();
         return realText;
@@ -942,9 +945,9 @@ public class FormattedEditText extends AppCompatEditText {
             }
             lastStart = spanStart;
         }
-        for (int i = index; i >= 0; i--) {
-            int spanStart = editable.getSpanStart(spanPairs[i][0]);
-            int spanEnd = editable.getSpanEnd(spanPairs[i][1]);
+        for (int j = index; j >= 0; j--) {
+            int spanStart = editable.getSpanStart(spanPairs[j][0]);
+            int spanEnd = editable.getSpanEnd(spanPairs[j][1]);
             editable.delete(spanStart, spanEnd);
         }
         clearArray(spanPairs);

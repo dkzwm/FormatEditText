@@ -50,6 +50,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -99,6 +100,7 @@ public class FormattedEditText extends AppCompatEditText {
     private HookLengthFilter mHookLengthFilter;
     private boolean mRestoring = false;
     private boolean mFilterRestoreTextChangeEvent = false;
+    private PlaceholderComparator mComparator = new PlaceholderComparator();
 
     public FormattedEditText(Context context) {
         super(context);
@@ -452,12 +454,16 @@ public class FormattedEditText extends AppCompatEditText {
         if (config.mHintColor != null) {
             mHintColor = config.mHintColor;
         }
+        Editable text = getText();
+        if (text == null || text.length() == 0) {
+            return;
+        }
         if (!create) {
             setText(getRealText());
         } else {
-            setText(getText());
+            setText(text);
         }
-        Editable text = getText();
+        text = getText();
         Selection.setSelection(text, text.length());
     }
 
@@ -523,7 +529,7 @@ public class FormattedEditText extends AppCompatEditText {
     }
 
     private String getRealText(boolean saved) {
-        if (mMode == MODE_NONE) {
+        if (saved && mMode == MODE_NONE) {
             return "";
         }
         Editable editable = getText();
@@ -532,7 +538,9 @@ public class FormattedEditText extends AppCompatEditText {
         }
         SpannableStringBuilder value = new SpannableStringBuilder(editable);
         IPlaceholderSpan[] spans;
-        if (mMode < MODE_MASK) {
+        if (mMode == MODE_NONE) {
+            spans = new IPlaceholderSpan[0];
+        } else if (mMode < MODE_MASK) {
             spans =
                     value.getSpans(
                             0,
@@ -655,7 +663,7 @@ public class FormattedEditText extends AppCompatEditText {
         }
     }
 
-    private void clearArray(final Placeholder[] holders) {
+    private <T> void clearArray(final T[] holders) {
         if (holders != null) {
             Arrays.fill(holders, null);
         }
@@ -806,10 +814,13 @@ public class FormattedEditText extends AppCompatEditText {
         IPlaceholderSpan[] spans;
         if (start > 0) {
             spans = editable.getSpans(0, start, IPlaceholderSpan.class);
-            if (spans.length != 0) {
+            if (spans.length > 0) {
                 if (spans.length == start) {
                     start = 0;
                 } else {
+                    mComparator.mEditable = editable;
+                    Arrays.sort(spans, mComparator);
+                    mComparator.mEditable = null;
                     int last = start - 1;
                     for (int i = spans.length - 1; i >= 0; i--) {
                         int spanStart = editable.getSpanStart(spans[i]);
@@ -824,9 +835,36 @@ public class FormattedEditText extends AppCompatEditText {
             }
         }
         spans = editable.getSpans(start, editable.length(), IPlaceholderSpan.class);
-        for (IPlaceholderSpan s : spans) {
-            int spanStart = editable.getSpanStart(s);
-            editable.delete(spanStart, spanStart + 1);
+        if (spans.length > 0) {
+            if (spans.length == editable.length() - start) {
+                editable.delete(start, editable.length());
+            } else {
+                mComparator.mEditable = editable;
+                Arrays.sort(spans, mComparator);
+                mComparator.mEditable = null;
+                IPlaceholderSpan[][] spansPair = new IPlaceholderSpan[spans.length][2];
+                int index = 0;
+                spansPair[index][0] = spans[0];
+                spansPair[index][1] = spans[0];
+                int lastStart = editable.getSpanStart(spans[0]);
+                for (int i = 1; i < spans.length; i++) {
+                    int spanStart = editable.getSpanStart(spans[i]);
+                    if (lastStart + 1 == spanStart) {
+                        spansPair[index][1] = spans[i];
+                    } else {
+                        if (index == spans.length - 1) break;
+                        index += 1;
+                        spansPair[index][0] = spans[i];
+                        spansPair[index][1] = spans[i];
+                    }
+                    lastStart = spanStart;
+                }
+                for (int i = index; i >= 0; i--) {
+                    int spanStart = editable.getSpanStart(spansPair[i][0]);
+                    int spanEnd = editable.getSpanEnd(spansPair[i][1]);
+                    editable.delete(spanStart, spanEnd);
+                }
+            }
         }
         if (delete
                 && start == editable.length()
@@ -1129,6 +1167,17 @@ public class FormattedEditText extends AppCompatEditText {
             out.writeInt(mHintColor);
             out.writeInt(mSelectionStart);
             out.writeInt(mSelectionEnd);
+        }
+    }
+
+    private static class PlaceholderComparator implements Comparator<IPlaceholderSpan> {
+        private Editable mEditable;
+
+        @Override
+        public int compare(IPlaceholderSpan o1, IPlaceholderSpan o2) {
+            int x = mEditable.getSpanStart(o1);
+            int y = mEditable.getSpanStart(o2);
+            return (x < y) ? -1 : ((x == y) ? 0 : 1);
         }
     }
 

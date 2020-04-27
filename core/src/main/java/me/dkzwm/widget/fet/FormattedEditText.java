@@ -885,7 +885,7 @@ public class FormattedEditText extends AppCompatEditText {
                         || (mMode == MODE_HINT && mHintText == null))) {
             return;
         }
-        int indexInStyle = start;
+        int indexInStyle = start + rangeCountEscapeChar(start);
         int indexInText = start;
         boolean nextCharIsText = false;
         final int styleLength = mFormatStyle.length();
@@ -948,6 +948,17 @@ public class FormattedEditText extends AppCompatEditText {
                 indexInStyle += 1;
             }
         }
+    }
+
+    private int rangeCountEscapeChar(int end) {
+        int count = 0;
+        for (int i = 0; i < end; i++) {
+            char c = mFormatStyle.charAt(i);
+            if (c == ESCAPE_CHAR) {
+                count += 1;
+            }
+        }
+        return count;
     }
 
     private void clearNonEmptySpans(Editable editable, IPlaceholderSpan[] spans) {

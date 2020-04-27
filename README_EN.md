@@ -1,10 +1,11 @@
 # FormatEditText
 ## English| [中文](https://github.com/dkzwm/FormatEditText/blob/master/README.md) 
+
 FormatEditText can be used as a number formatted text input box, which can be used to format phone numbers, format ID numbers, format bank card numbers, etc.
 
-- For example, specify the mode as `MODE_SIMPLE`, the style as `344`, the placeholder as `-`, manually enter `13012345678`, then it will be formatted as `130-1234-5678`. specify the mode as `MODE_COMPLEX`, the style as `***-****-****`, the mark as `-`, manually enter `13012345678`, then it will be formatted as `130-1234-5678`.
 ## Features:
  - Support configuration format style
+ - Support configuration hint text (MODE = `MODE_HINT`)
  - Support paste and the cursor will auto follow
  - Automatic append or delete placeholder
  - Support for configuration clear icon without occupying the position of CompoundDrawables
@@ -17,60 +18,117 @@ Download [Demo.apk](https://raw.githubusercontent.com/dkzwm/FormatEditText/maste
 Add the following dependency to your build.gradle file:
 ```
 dependencies {
-    implementation 'me.dkzwm.widget.fet:core:0.0.8'
-    AndroidX Kotlin version
-    implementation 'me.dkzwm.widget.fet:core:0.0.8.androidxKT'
+    implementation 'me.dkzwm.widget.fet:core:1.0.0'
 }
 ```
 ## How to used
 #### In Xml
 ```
-//MODE_COMPLEX
 <me.dkzwm.widget.fet.FormattedEditText
+    android:id="@+id/formattedEditText_simple"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:fet_clearDrawable="@drawable/icon_clear"
-    app:fet_drawableGravity="fet_center"
-    app:fet_drawablePadding="4dp"
-    app:fet_formatStyle="+(**)-***-****-****"
-    app:fet_mark="*"
-    app:fet_mode="mode_complex"/>
-
-//MODE_SIMPLE
-<me.dkzwm.widget.fet.FormattedEditText
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:inputType="phone"
+    android:maxLength="13"
     app:fet_clearDrawable="@drawable/icon_clear"
     app:fet_drawableGravity="fet_center"
     app:fet_drawablePadding="4dp"
     app:fet_formatStyle="344"
     app:fet_mode="mode_simple"
-    app:fet_placeholder=" "/>
+    app:fet_placeholder="-" />
+
+<me.dkzwm.widget.fet.FormattedEditText
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:inputType="phone"
+    android:maxLength="19"
+    app:fet_clearDrawable="@drawable/icon_clear"
+    app:fet_drawableGravity="fet_center"
+    app:fet_drawablePadding="4dp"
+    app:fet_formatStyle="+(86)-***-****-****"
+    app:fet_mark="*"
+    app:fet_mode="mode_complex" />
+
+<me.dkzwm.widget.fet.FormattedEditText
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:inputType="phone"
+    android:maxLength="19"
+    app:fet_clearDrawable="@drawable/icon_clear"
+    app:fet_drawableGravity="fet_center"
+    app:fet_drawablePadding="4dp"
+    app:fet_emptyPlaceholder="_"
+    app:fet_formatStyle="+(86)-000-0000-0000"
+    app:fet_mode="mode_mask"
+    app:fet_showHintWhileEmpty="true" />
+
+<me.dkzwm.widget.fet.FormattedEditText
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:digits="0123456789X"
+    android:maxLength="22"
+    app:fet_clearDrawable="@drawable/icon_clear"
+    app:fet_drawableGravity="fet_center"
+    app:fet_drawablePadding="4dp"
+    app:fet_formatStyle="000 000 0000 0000 000*"
+    app:fet_hintText="100 000 2020 0101 000X"
+    app:fet_mode="mode_hint"
+    app:fet_showHintWhileEmpty="false" />
 ```
 ####  In Java
 ```
-//MODE_COMPLEX
-FormattedEditText editText = findViewById(R.id.formattedEditText);
-editText.setMode(FormattedEditText.MODE_SIMPLE);
-editText.setClearDrawable(ContextCompat.getDrawable(context,R.drawable.icon_clear));
-editText.setFormatStyle("344");
-editText.setPlaceholder(" ");（manually enter "13012345678", then it will be formatted as "130-1234-5678"）
-//MODE_SIMPLE
-editText.setMode(FormattedEditText.MODE_SIMPLE);
-editText.setClearDrawable(ContextCompat.getDrawable(context,R.drawable.icon_clear));
-editText.setMark("*");
-editText.setFormatStyle("+(**)-***-****-****");（manually enter "8613012345678"，then it will be formatted as "+(86)-130-1234-5678"）
+FormattedEditText.Config.create()
+        .mode(FormattedEditText.MODE_SIMPLE)
+        .formatStyle("344")
+        .placeholder(' ')
+        .config(editText);
+FormattedEditText.Config.create()
+        .mode(FormattedEditText.MODE_COMPLEX)
+        .formatStyle("+(86)-***-****-****")
+        .mark('*')
+        .config(editText);
+FormattedEditText.Config.create()
+        .mode(FormattedEditText.MODE_MASK)
+        .formatStyle("+(86)-000-0000-0000")
+        .emptyPlaceholder('_')
+        .showHintWhileEmpty(true)
+        .config(editText);
+FormattedEditText.Config.create()
+        .mode(FormattedEditText.MODE_HINT)
+        .formatStyle("+(86)-000-0000-0000")
+        .hintText("+(86)-130-1234-5678")
+        .hintColor(Color.GRAY)
+        .showHintWhileEmpty(true)
+        .config(editText);
 ```
-#### Xml属性 
+#### Xml attr 
 |Name|Format|Desc|
 |:---:|:---:|:---:|
-|fet_mode|enum|Set the mode， `MODE_SIMPLE` and `MODE_COMPLEX`|
-|fet_formatStyle|string|Set the format style，When `fet_mode` is `MODE_SIMPLE`, the format can only be a pure number. When `fet_mode` is `MODE_COMPLEX`, the format is an arbitrary format and the `fet_mark` attribute needs to be specified. If not specified then the default is `*`|
+|fet_mode|enum|Set the mode， `MODE_SIMPLE`/`MODE_COMPLEX`/`MODE_MASK`/`MODE_HINT`|
+|fet_formatStyle|string|Set the format style，When `fet_mode` is `MODE_SIMPLE`, the format can only be a pure number; When `fet_mode` is `MODE_COMPLEX`, the format is an arbitrary format and the `fet_mark` attribute needs to be specified. If not specified then the default is `*`;|
 |fet_mark|string|Set the mark，Only set when `fet_mode` is `MODE_COMPLEX`, and the length must be 1 (default: `*`)|
 |fet_placeholder|string|Set the placeholder，Only set when `fet_mode` is `MODE_SIMPLE`, and the length must be 1 (default: ` `)|
+|fet_emptyPlaceholder|string|Set the empty data placeholder，Only set when `fet_mode`为 `MODE_MASK` , and the length must be 1|
+|fet_hintText|string|Set the hint text，Only set when `fet_mode` is `MODE_HINT`, the hint text style must be conform to formatting style|
+|fet_hintTextColor|color|Set the hint text color，Only set when `fet_mode` is `MODE_HINT`|
+|fet_showHintWhileEmpty|boolean|Set whether to display the default hint text（android:hint）after clearing the data，Only set when `fet_mode` is `MODE_MASK` or `MODE_HINT`|
 |fet_clearDrawable|reference|Set the clear icon|
 |fet_drawableGravity|enum|Set the gravity of clear icon，support `GRAVITY_TOP`、`GRAVITY_CENTER`、`GRAVITY_BOTTOM`，(default`GRAVITY_CENTER`)|
 |fet_drawablePadding|dimension|Set the padding of clear icon|
+
+#### 特性描述
+When the modes are `MODE_MASK` and` MODE_HINT`, the following characters in the formatting style have special meanings:
+
+ - 0 —— Numeric mask, this will accept only numbers to be typed
+ - A —— Letter mask, this will accept only alphabet letters to be typed
+ - * —— Numeric and Letter mask, this will accept numbers and alphabet letters to be typed
+ - ？—— Character mask, this will accept anything to be typed
+ 
+Any character that does not have a special meaning will be treated as a literal character and will appear as is in the `FormattedEditText`.
+If you need to display these 4 special characters as they are, you need to use the escape character `\`. For example, the internal `0086` of `\\0\\086 000 0000 0000` is displayed as it is during formatting.  
+
+## 感谢
+- [reinaldoarrosi—MaskedEditText](https://github.com/reinaldoarrosi/MaskedEditText)   
 
 ## License
 	--------

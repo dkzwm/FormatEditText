@@ -189,6 +189,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void appendAfterTextChangedLog(Editable s) {
-        mTextViewLogs.append(String.format(Locale.getDefault(), "afterTextChanged: s: %s \n", s));
+        mTextViewLogs.append(String.format(Locale.getDefault(), "afterTextChanged: s: %s \n\n", s));
     }
 }

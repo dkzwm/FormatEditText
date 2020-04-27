@@ -79,6 +79,7 @@
         app:fet_clearDrawable="@drawable/icon_clear"
         app:fet_drawableGravity="fet_center"
         app:fet_drawablePadding="4dp"
+        app:fet_emptyPlaceholder="_"
         app:fet_formatStyle="+(86)-000-0000-0000"
         app:fet_mode="mode_mask"
         app:fet_showHintWhileEmpty="true" />

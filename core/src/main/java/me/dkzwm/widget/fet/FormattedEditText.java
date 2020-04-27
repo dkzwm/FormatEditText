@@ -773,7 +773,7 @@ public class FormattedEditText extends AppCompatEditText {
                     editable,
                     Math.min(selectionStart, editable.length()),
                     Math.min(selectionEnd, editable.length()));
-            sendOnTextChanged(editable, selectionStart, mIntPair[0], mIntPair[1]);
+            sendOnTextChanged(editable, start - (mIntPair[0] - before), mIntPair[0], mIntPair[1]);
             sendAfterTextChanged(editable);
         } else {
             editable.setFilters(filters);
@@ -977,8 +977,8 @@ public class FormattedEditText extends AppCompatEditText {
             int spanStart = editable.getSpanStart(spanPairs[j][0]);
             int spanEnd = editable.getSpanEnd(spanPairs[j][1]);
             editable.delete(spanStart, spanEnd);
+            spanPairs[j] = null;
         }
-        clearArray(spanPairs);
     }
 
     private boolean isMismatchMask(char mask, char value) {

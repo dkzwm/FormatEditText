@@ -1,5 +1,5 @@
 # FormatEditText
-## [English](https://github.com/dkzwm/FormatEditText/blob/master/README_EN.md) | 中文
+## [English](README_EN.md) | 中文
 
 FormatEditText可以用来当做号码格式化文本输入框使用, 可以用来作为格式化手机号码、格式化身份证号码、格式化银行卡号码等.    
 

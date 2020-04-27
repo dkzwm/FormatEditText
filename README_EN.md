@@ -1,5 +1,5 @@
 # FormatEditText
-## English| [中文](https://github.com/dkzwm/FormatEditText/blob/master/README.md) 
+## English| [中文](README.md) 
 
 FormatEditText can be used as a number formatted text input box, which can be used to format phone numbers, format ID numbers, format bank card numbers, etc.
 

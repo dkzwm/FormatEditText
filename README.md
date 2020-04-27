@@ -18,9 +18,10 @@ FormatEditText可以用来当做号码格式化文本输入框使用, 可以用�
 添加如下依赖到你的 build.gradle 文件:
 ```
 dependencies {
-    implementation 'me.dkzwm.widget.fet:core:1.0.0'
+    implementation 'me.dkzwm.widget.fet:core:0.1.0'
 }
 ```
+如果需要使用老的Android Support对应版本，请查看[0.0.8使用简介](https://github.com/dkzwm/FormatEditText/blob/v0.0.8/README.md)
 ## 使用
 #### 在Xml中配置
 ```

@@ -54,7 +54,7 @@ ext {
             minSdkVersion    : 14,
             targetSdkVersion : 29,
             versionCode      : 12,
-            versionName      : "1.0.0"
+            versionName      : "0.1.0"
     ]
     bintray = [
             siteUrl       : 'https://github.com/dkzwm/FormatEditText',

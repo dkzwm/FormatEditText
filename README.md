@@ -116,7 +116,7 @@ FormattedEditText.Config.create()
 |fet_drawableGravity|enum|指定删除图标的对齐方式，支持`GRAVITY_TOP`、`GRAVITY_CENTER`、`GRAVITY_BOTTOM`，默认为`GRAVITY_CENTER`，即居中对齐|
 |fet_drawablePadding|dimension|指定删除图标的填充大小|
 
-#### 特性描述
+#### 掩码
 在模式为`MODE_MASK`和`MODE_HINT`时，格式化样式中的以下字符具有特殊含义：
 
  - 0 \- 数字掩码，只接受输入数字

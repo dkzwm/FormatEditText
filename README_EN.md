@@ -116,7 +116,7 @@ FormattedEditText.Config.create()
 |fet_drawableGravity|enum|Set the gravity of clear icon，support `GRAVITY_TOP`、`GRAVITY_CENTER`、`GRAVITY_BOTTOM`，(default`GRAVITY_CENTER`)|
 |fet_drawablePadding|dimension|Set the padding of clear icon|
 
-#### 特性描述
+#### Mask
 When the modes are `MODE_MASK` and` MODE_HINT`, the following characters in the formatting style have special meanings:
 
  - 0 \- Numeric mask, this will accept only numbers to be typed
@@ -127,7 +127,7 @@ When the modes are `MODE_MASK` and` MODE_HINT`, the following characters in the 
 Any character that does not have a special meaning will be treated as a literal character and will appear as is in the `FormattedEditText`.
 If you need to display these 4 special characters as they are, you need to use the escape character `\`. For example, the internal `0086` of `\\0\\086 000 0000 0000` is displayed as it is during formatting.  
 
-## 感谢
+## Thanks
 - [reinaldoarrosi—MaskedEditText](https://github.com/reinaldoarrosi/MaskedEditText)   
 
 ## License

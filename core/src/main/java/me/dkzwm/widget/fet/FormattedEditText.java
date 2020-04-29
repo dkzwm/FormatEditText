@@ -103,7 +103,7 @@ public class FormattedEditText extends AppCompatEditText {
     private boolean mRestoring = false;
     private boolean mFilterRestoreTextChangeEvent = false;
     private PlaceholderComparator mComparator = new PlaceholderComparator();
-    private int[] mIntPair = new int[2];
+    private int[] mEscapeIndexes;
 
     public FormattedEditText(Context context) {
         super(context);
@@ -429,8 +429,23 @@ public class FormattedEditText extends AppCompatEditText {
                     mMark = config.mMark;
                 }
                 parseComplexPlaceholders();
-            } else if (mMode == MODE_HINT) {
-                checkHintStyleIsRight(config.mHintText);
+            } else {
+                final int length = mFormatStyle.length();
+                final int[] temp = new int[length];
+                int index = 0;
+                for (int i = 0; i < mFormatStyle.length(); i++) {
+                    char c = mFormatStyle.charAt(i);
+                    if (c == ESCAPE_CHAR) {
+                        temp[index] = i;
+                        index++;
+                    }
+                }
+                final int[] indexes = new int[index];
+                System.arraycopy(temp, 0, indexes, 0, index);
+                mEscapeIndexes = indexes;
+                if (mMode == MODE_HINT) {
+                    checkHintStyleIsRight(config.mHintText);
+                }
             }
         } else if (mFormatStyle != null) {
             if (mMode == MODE_SIMPLE) {
@@ -696,12 +711,10 @@ public class FormattedEditText extends AppCompatEditText {
             selectionEnd = Selection.getSelectionEnd(editable);
             editable.setSpan(SELECTION_SPAN, selectionStart, selectionEnd, Spanned.SPAN_MARK_MARK);
         }
-        mIntPair[0] = before;
-        mIntPair[1] = 0;
         if (mMode < MODE_MASK) {
             final boolean deletedLast = start >= editable.length();
             if (!deletedLast) {
-                formatDefined(editable, start, mIntPair);
+                formatDefined(editable, start);
             } else {
                 for (int i = start; i > 0; i--) {
                     final char sub = editable.charAt(i - 1);
@@ -709,14 +722,13 @@ public class FormattedEditText extends AppCompatEditText {
                     if (sub == place) {
                         editable.delete(i - 1, i);
                         start -= 1;
-                        mIntPair[0] += 1;
                     } else {
                         break;
                     }
                 }
             }
         } else {
-            formatMask(editable, start, true, mIntPair);
+            formatMask(editable, start, true);
         }
         if (!filter) {
             selectionStart = editable.getSpanStart(SELECTION_SPAN);
@@ -725,8 +737,6 @@ public class FormattedEditText extends AppCompatEditText {
             editable.setFilters(filters);
             Editable text = getText();
             Selection.setSelection(text, selectionStart, selectionEnd);
-            sendOnTextChanged(text, selectionStart, mIntPair[0], mIntPair[1]);
-            sendAfterTextChanged(text);
         } else {
             setFilters(filters);
         }
@@ -746,15 +756,13 @@ public class FormattedEditText extends AppCompatEditText {
             selectionEnd = Selection.getSelectionEnd(editable);
             editable.setSpan(SELECTION_SPAN, selectionStart, selectionEnd, Spanned.SPAN_MARK_MARK);
         }
-        mIntPair[0] = before;
-        mIntPair[1] = count;
         if (mMode < MODE_MASK) {
             boolean appendedLast = start > mHolders[mHolders.length - 1].index;
             if (!appendedLast) {
-                formatDefined(editable, start, mIntPair);
+                formatDefined(editable, start);
             }
         } else {
-            formatMask(editable, start, false, mIntPair);
+            formatMask(editable, start, false);
         }
         if (!filter) {
             selectionStart = editable.getSpanStart(SELECTION_SPAN);
@@ -773,8 +781,6 @@ public class FormattedEditText extends AppCompatEditText {
                     editable,
                     Math.min(selectionStart, editable.length()),
                     Math.min(selectionEnd, editable.length()));
-            sendOnTextChanged(editable, start - (mIntPair[0] - before), mIntPair[0], mIntPair[1]);
-            sendAfterTextChanged(editable);
         } else {
             editable.setFilters(filters);
         }
@@ -810,7 +816,7 @@ public class FormattedEditText extends AppCompatEditText {
         return 0;
     }
 
-    private void formatDefined(Editable editable, int start, int[] calc) {
+    private void formatDefined(Editable editable, int start) {
         IPlaceholderSpan[] spans =
                 editable.getSpans(start, editable.length(), IPlaceholderSpan.class);
         for (IPlaceholderSpan s : spans) {
@@ -831,7 +837,6 @@ public class FormattedEditText extends AppCompatEditText {
                         indexInEditable,
                         indexInEditable + 1,
                         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                calc[1] += 1;
                 indexInEditable += 1;
             } else {
                 indexInEditable += 1;
@@ -839,8 +844,7 @@ public class FormattedEditText extends AppCompatEditText {
         }
     }
 
-    private void formatMask(final Editable editable, int start, boolean delete, int[] calc) {
-        final int originalStart = start;
+    private void formatMask(final Editable editable, int start, boolean delete) {
         IPlaceholderSpan[] spans;
         if (start > 0) {
             spans = editable.getSpans(0, start, IPlaceholderSpan.class);
@@ -864,7 +868,6 @@ public class FormattedEditText extends AppCompatEditText {
                 }
             }
         }
-        calc[0] += originalStart - start;
         spans = editable.getSpans(start, editable.length(), IPlaceholderSpan.class);
         if (spans.length > 0) {
             if (spans.length == editable.length() - start) {
@@ -888,6 +891,8 @@ public class FormattedEditText extends AppCompatEditText {
         int indexInStyle = start + rangeCountEscapeChar(start);
         int indexInText = start;
         boolean nextCharIsText = false;
+        boolean havingRealText = false;
+        boolean beenResetSpan = false;
         final int styleLength = mFormatStyle.length();
         while (indexInStyle < styleLength) {
             char charInStyle = mFormatStyle.charAt(indexInStyle);
@@ -895,13 +900,20 @@ public class FormattedEditText extends AppCompatEditText {
                 if (indexInText >= editable.length()) {
                     if (mMode == MODE_MASK) {
                         if (mEmptyPlaceholder != 0) {
+                            if (delete && start == 0 && !havingRealText && !beenResetSpan) {
+                                beenResetSpan = true;
+                                editable.setSpan(
+                                        SELECTION_SPAN,
+                                        indexInText,
+                                        indexInText,
+                                        Spanned.SPAN_MARK_MARK);
+                            }
                             editable.insert(indexInText, String.valueOf(mEmptyPlaceholder));
                             editable.setSpan(
                                     new EmptyPlaceholderSpan(),
                                     indexInText,
                                     indexInText + 1,
                                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                            calc[1] += 1;
                             indexInText += 1;
                             indexInStyle += 1;
                         } else {
@@ -910,6 +922,14 @@ public class FormattedEditText extends AppCompatEditText {
                     } else {
                         if (mHintText == null) {
                             break;
+                        }
+                        if (delete && start == 0 && !havingRealText && !beenResetSpan) {
+                            beenResetSpan = true;
+                            editable.setSpan(
+                                    SELECTION_SPAN,
+                                    indexInText,
+                                    indexInText,
+                                    Spanned.SPAN_MARK_MARK);
                         }
                         editable.insert(
                                 indexInText, mHintText.subSequence(indexInText, indexInText + 1));
@@ -921,14 +941,13 @@ public class FormattedEditText extends AppCompatEditText {
                                 indexInText,
                                 indexInText + 1,
                                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        calc[1] += 1;
                         indexInText += 1;
                         indexInStyle += 1;
                     }
                 } else if (isMismatchMask(charInStyle, editable.charAt(indexInText))) {
                     editable.delete(indexInText, indexInText + 1);
-                    calc[1] -= 1;
                 } else {
+                    havingRealText = true;
                     indexInText += 1;
                     indexInStyle += 1;
                 }
@@ -943,7 +962,6 @@ public class FormattedEditText extends AppCompatEditText {
                         indexInText + 1,
                         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 nextCharIsText = false;
-                calc[1] += 1;
                 indexInText += 1;
                 indexInStyle += 1;
             }
@@ -951,11 +969,15 @@ public class FormattedEditText extends AppCompatEditText {
     }
 
     private int rangeCountEscapeChar(int end) {
+        if (mEscapeIndexes == null) {
+            return 0;
+        }
         int count = 0;
-        for (int i = 0; i < end; i++) {
-            char c = mFormatStyle.charAt(i);
-            if (c == ESCAPE_CHAR) {
+        for (int escapeIndex : mEscapeIndexes) {
+            if (escapeIndex < end) {
                 count += 1;
+            } else {
+                break;
             }
         }
         return count;
@@ -1282,7 +1304,7 @@ public class FormattedEditText extends AppCompatEditText {
     private class FormattedTextWatcher implements TextWatcher {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            if (mRestoring || mFilterRestoreTextChangeEvent) {
+            if (mRestoring) {
                 return;
             }
             sendBeforeTextChanged(s, start, count, after);
@@ -1293,8 +1315,8 @@ public class FormattedEditText extends AppCompatEditText {
             if (mRestoring) {
                 return;
             }
+            sendOnTextChanged(s, start, before, count);
             if (mMode == MODE_NONE || (mMode < MODE_MASK) && (mHolders == null)) {
-                sendOnTextChanged(s, start, before, count);
                 return;
             }
             if (!mIsFormatted && s instanceof Editable) {
@@ -1311,9 +1333,7 @@ public class FormattedEditText extends AppCompatEditText {
             if (mRestoring) {
                 return;
             }
-            if (mMode == MODE_NONE || (mMode < MODE_MASK) && (mHolders == null)) {
-                sendAfterTextChanged(s);
-            }
+            sendAfterTextChanged(s);
         }
     }
 }

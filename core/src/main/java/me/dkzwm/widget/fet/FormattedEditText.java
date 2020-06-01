@@ -721,7 +721,6 @@ public class FormattedEditText extends AppCompatEditText {
                     final char place = findPlaceholder(i - 1);
                     if (sub == place) {
                         editable.delete(i - 1, i);
-                        start -= 1;
                     } else {
                         break;
                     }
@@ -872,10 +871,7 @@ public class FormattedEditText extends AppCompatEditText {
         if (spans.length > 0) {
             if (spans.length == editable.length() - start) {
                 editable.delete(start, editable.length());
-                if (start == 0
-                                && (mMode == MODE_MASK
-                                        && (mShowHintWhileEmpty || mEmptyPlaceholder == 0))
-                        || (mMode == MODE_HINT && (mShowHintWhileEmpty || mHintText == null))) {
+                if (start == 0 && isNeedClearText()) {
                     return;
                 }
             } else {
@@ -968,6 +964,11 @@ public class FormattedEditText extends AppCompatEditText {
         }
     }
 
+    private boolean isNeedClearText() {
+        return (mMode == MODE_MASK && (mShowHintWhileEmpty || mEmptyPlaceholder == 0))
+                || (mMode == MODE_HINT && (mShowHintWhileEmpty || mHintText == null));
+    }
+
     private int rangeCountEscapeChar(int end) {
         if (mEscapeIndexes == null) {
             return 0;
@@ -987,31 +988,20 @@ public class FormattedEditText extends AppCompatEditText {
         mComparator.mEditable = editable;
         Arrays.sort(spans, mComparator);
         mComparator.mEditable = null;
-        IPlaceholderSpan[][] spanPairs = new IPlaceholderSpan[spans.length][2];
-        int index = 0;
-        spanPairs[index][0] = spans[0];
-        spanPairs[index][1] = spans[0];
-        int lastStart = editable.getSpanStart(spans[0]);
+        IPlaceholderSpan last = spans[0], current = spans[0];
+        int lastStart = editable.getSpanStart(last);
         for (int i = 1; i < spans.length; i++) {
             int spanStart = editable.getSpanStart(spans[i]);
             if (lastStart + 1 == spanStart) {
-                spanPairs[index][1] = spans[i];
+                current = spans[i];
             } else {
-                if (index == spans.length - 1) {
-                    break;
-                }
-                index += 1;
-                spanPairs[index][0] = spans[i];
-                spanPairs[index][1] = spans[i];
+                editable.delete(editable.getSpanStart(last), editable.getSpanEnd(current));
+                last = current = spans[i];
+                spanStart = editable.getSpanStart(last);
             }
             lastStart = spanStart;
         }
-        for (int j = index; j >= 0; j--) {
-            int spanStart = editable.getSpanStart(spanPairs[j][0]);
-            int spanEnd = editable.getSpanEnd(spanPairs[j][1]);
-            editable.delete(spanStart, spanEnd);
-            spanPairs[j] = null;
-        }
+        editable.delete(editable.getSpanStart(last), editable.getSpanEnd(current));
     }
 
     private boolean isMismatchMask(char mask, char value) {

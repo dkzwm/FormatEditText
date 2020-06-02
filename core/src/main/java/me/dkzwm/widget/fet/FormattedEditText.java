@@ -70,6 +70,7 @@ public class FormattedEditText extends AppCompatEditText {
     public static final int GRAVITY_BOTTOM = 2;
     private static final Object SELECTION_SPAN = new Object();
     private static final InputFilter[] EMPTY_FILTERS = new InputFilter[0];
+    private static final IPlaceholderSpan[] EMPTY_SPANS = new IPlaceholderSpan[0];
     private static final Spanned EMPTY_SPANNED = new SpannedString("");
     private static final char DEFAULT_PLACE_HOLDER = ' ';
     private static final char DEFAULT_MARK = '*';
@@ -306,12 +307,10 @@ public class FormattedEditText extends AppCompatEditText {
                                 && Math.abs(mDownPoint[1] - y) <= mTouchSlop) {
                             if (mClearClickListener != null) {
                                 if (!mClearClickListener.onClearClick(this, mClearDrawable)) {
-                                    event.setAction(MotionEvent.ACTION_CANCEL);
-                                    clearText();
+                                    clearTextInTouch(event);
                                 }
                             } else {
-                                event.setAction(MotionEvent.ACTION_CANCEL);
-                                clearText();
+                                clearTextInTouch(event);
                             }
                             super.onTouchEvent(event);
                             return true;
@@ -401,7 +400,8 @@ public class FormattedEditText extends AppCompatEditText {
         return mHintColor;
     }
 
-    private void clearText() {
+    private void clearTextInTouch(MotionEvent event) {
+        event.setAction(MotionEvent.ACTION_CANCEL);
         Editable editable = getText();
         if (editable != null) {
             editable.clear();
@@ -714,7 +714,7 @@ public class FormattedEditText extends AppCompatEditText {
         if (mMode < MODE_MASK) {
             final boolean deletedLast = start >= editable.length();
             if (!deletedLast) {
-                formatDefined(editable, start);
+                formatDefined(editable, start, true);
             } else {
                 for (int i = start; i > 0; i--) {
                     final char sub = editable.charAt(i - 1);
@@ -758,7 +758,7 @@ public class FormattedEditText extends AppCompatEditText {
         if (mMode < MODE_MASK) {
             boolean appendedLast = start > mHolders[mHolders.length - 1].index;
             if (!appendedLast) {
-                formatDefined(editable, start);
+                formatDefined(editable, start, false);
             }
         } else {
             formatMask(editable, start, false);
@@ -815,70 +815,47 @@ public class FormattedEditText extends AppCompatEditText {
         return 0;
     }
 
-    private void formatDefined(Editable editable, int start) {
-        IPlaceholderSpan[] spans =
-                editable.getSpans(start, editable.length(), IPlaceholderSpan.class);
-        for (IPlaceholderSpan s : spans) {
-            int spanStart = editable.getSpanStart(s);
-            editable.delete(spanStart, spanStart + 1);
-        }
-        int indexInEditable = start;
+    private void formatDefined(Editable editable, int start, boolean deletion) {
+        start = clearPlaceholders(editable, start);
+        int selectionIndex = -1;
+        int indexInText = start;
         final int maxPos = mHolders[mHolders.length - 1].index;
-        while (indexInEditable < maxPos) {
-            if (indexInEditable >= editable.length()) {
+        while (indexInText < maxPos) {
+            if (indexInText >= editable.length()) {
                 break;
             }
-            char placeholder = findPlaceholder(indexInEditable);
+            char placeholder = findPlaceholder(indexInText);
             if (placeholder != 0) {
-                editable.insert(indexInEditable, String.valueOf(placeholder));
+                editable.insert(indexInText, String.valueOf(placeholder));
                 editable.setSpan(
                         new PlaceholderSpan(),
-                        indexInEditable,
-                        indexInEditable + 1,
+                        indexInText,
+                        indexInText + 1,
                         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                indexInEditable += 1;
+                indexInText += 1;
+                if (selectionIndex == -1) {
+                    if (indexInText == start + 1) {
+                        selectionIndex = indexInText;
+                    }
+                } else if (indexInText == selectionIndex + 1) {
+                    selectionIndex = indexInText;
+                }
             } else {
-                indexInEditable += 1;
+                indexInText += 1;
             }
+        }
+        if (deletion && start == 0 && selectionIndex != -1) {
+            editable.setSpan(
+                    SELECTION_SPAN, selectionIndex, selectionIndex, Spanned.SPAN_MARK_MARK);
         }
     }
 
-    private void formatMask(final Editable editable, int start, boolean delete) {
-        IPlaceholderSpan[] spans;
-        if (start > 0) {
-            spans = editable.getSpans(0, start, IPlaceholderSpan.class);
-            if (spans.length > 0) {
-                if (spans.length == start) {
-                    start = 0;
-                } else {
-                    mComparator.mEditable = editable;
-                    Arrays.sort(spans, mComparator);
-                    mComparator.mEditable = null;
-                    int last = start - 1;
-                    for (int i = spans.length - 1; i >= 0; i--) {
-                        int spanStart = editable.getSpanStart(spans[i]);
-                        if (last != spanStart) {
-                            last += 1;
-                            break;
-                        }
-                        last = spanStart - 1;
-                    }
-                    start = last;
-                }
-            }
+    private void formatMask(final Editable editable, int start, boolean deletion) {
+        start = clearPlaceholders(editable, start);
+        if (start == -1) {
+            return;
         }
-        spans = editable.getSpans(start, editable.length(), IPlaceholderSpan.class);
-        if (spans.length > 0) {
-            if (spans.length == editable.length() - start) {
-                editable.delete(start, editable.length());
-                if (start == 0 && isNeedClearText()) {
-                    return;
-                }
-            } else {
-                clearNonEmptySpans(editable, spans);
-            }
-        }
-        if (delete
+        if (deletion
                 && start == editable.length()
                 && ((mMode == MODE_MASK && mEmptyPlaceholder == 0)
                         || (mMode == MODE_HINT && mHintText == null))) {
@@ -886,9 +863,8 @@ public class FormattedEditText extends AppCompatEditText {
         }
         int indexInStyle = start + rangeCountEscapeChar(start);
         int indexInText = start;
+        int selectionIndex = -1;
         boolean nextCharIsText = false;
-        boolean havingRealText = false;
-        boolean beenResetSpan = false;
         final int styleLength = mFormatStyle.length();
         while (indexInStyle < styleLength) {
             char charInStyle = mFormatStyle.charAt(indexInStyle);
@@ -896,14 +872,6 @@ public class FormattedEditText extends AppCompatEditText {
                 if (indexInText >= editable.length()) {
                     if (mMode == MODE_MASK) {
                         if (mEmptyPlaceholder != 0) {
-                            if (delete && start == 0 && !havingRealText && !beenResetSpan) {
-                                beenResetSpan = true;
-                                editable.setSpan(
-                                        SELECTION_SPAN,
-                                        indexInText,
-                                        indexInText,
-                                        Spanned.SPAN_MARK_MARK);
-                            }
                             editable.insert(indexInText, String.valueOf(mEmptyPlaceholder));
                             editable.setSpan(
                                     new EmptyPlaceholderSpan(),
@@ -918,14 +886,6 @@ public class FormattedEditText extends AppCompatEditText {
                     } else {
                         if (mHintText == null) {
                             break;
-                        }
-                        if (delete && start == 0 && !havingRealText && !beenResetSpan) {
-                            beenResetSpan = true;
-                            editable.setSpan(
-                                    SELECTION_SPAN,
-                                    indexInText,
-                                    indexInText,
-                                    Spanned.SPAN_MARK_MARK);
                         }
                         editable.insert(
                                 indexInText, mHintText.subSequence(indexInText, indexInText + 1));
@@ -943,7 +903,6 @@ public class FormattedEditText extends AppCompatEditText {
                 } else if (isMismatchMask(charInStyle, editable.charAt(indexInText))) {
                     editable.delete(indexInText, indexInText + 1);
                 } else {
-                    havingRealText = true;
                     indexInText += 1;
                     indexInStyle += 1;
                 }
@@ -960,8 +919,73 @@ public class FormattedEditText extends AppCompatEditText {
                 nextCharIsText = false;
                 indexInText += 1;
                 indexInStyle += 1;
+                if (selectionIndex == -1 || indexInText == selectionIndex + 1) {
+                    selectionIndex = indexInText;
+                }
             }
         }
+        if (deletion && start == 0 && selectionIndex != -1) {
+            editable.setSpan(
+                    SELECTION_SPAN, selectionIndex, selectionIndex, Spanned.SPAN_MARK_MARK);
+        }
+    }
+
+    private int clearPlaceholders(Editable editable, int start) {
+        IPlaceholderSpan[] spans;
+        if (start > 0) {
+            IPlaceholderSpan[] left = editable.getSpans(0, start, IPlaceholderSpan.class);
+            IPlaceholderSpan[] right;
+            if (start >= editable.length()) {
+                right = EMPTY_SPANS;
+            } else {
+                right = editable.getSpans(start, editable.length(), IPlaceholderSpan.class);
+            }
+            if (left.length == start) {
+                start = 0;
+                spans = new IPlaceholderSpan[left.length + right.length];
+                System.arraycopy(left, 0, spans, 0, left.length);
+                System.arraycopy(right, 0, spans, left.length, right.length);
+            } else if (left.length > 0) {
+                mComparator.mEditable = editable;
+                Arrays.sort(left, mComparator);
+                mComparator.mEditable = null;
+                int last = start - 1;
+                int index;
+                for (index = left.length - 1; index >= 0; index--) {
+                    int spanStart = editable.getSpanStart(left[index]);
+                    if (last != spanStart) {
+                        last += 1;
+                        index += 1;
+                        break;
+                    }
+                    last = spanStart - 1;
+                }
+                start = last;
+                int leftLength = left.length - index;
+                if (leftLength == 0) {
+                    spans = right;
+                } else {
+                    spans = new IPlaceholderSpan[leftLength + right.length];
+                    System.arraycopy(left, index, spans, 0, leftLength);
+                    System.arraycopy(right, 0, spans, leftLength, right.length);
+                }
+            } else {
+                spans = right;
+            }
+        } else {
+            spans = editable.getSpans(0, editable.length(), IPlaceholderSpan.class);
+        }
+        if (spans.length > 0) {
+            if (spans.length == editable.length() - start) {
+                editable.delete(start, editable.length());
+                if (start == 0 && isNeedClearText()) {
+                    return -1;
+                }
+            } else {
+                clearNonEmptySpans(editable, spans);
+            }
+        }
+        return start;
     }
 
     private boolean isNeedClearText() {

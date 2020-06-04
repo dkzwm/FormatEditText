@@ -589,7 +589,7 @@ public class FormattedEditText extends AppCompatEditText {
                 return null;
             }
         } else {
-            clearNonEmptySpans(value, spans);
+            clearNonEmptySpans(value, spans, false);
         }
         final String realText = value.toString();
         value.clear();
@@ -693,9 +693,9 @@ public class FormattedEditText extends AppCompatEditText {
         }
     }
 
-    private <T> void clearArray(final T[] holders) {
-        if (holders != null) {
-            Arrays.fill(holders, null);
+    private <T> void clearArray(final T[] array) {
+        if (array != null) {
+            Arrays.fill(array, null);
         }
     }
 
@@ -932,23 +932,41 @@ public class FormattedEditText extends AppCompatEditText {
 
     private int clearPlaceholders(Editable editable, int start) {
         IPlaceholderSpan[] spans;
+        boolean sorted;
         if (start > 0) {
-            IPlaceholderSpan[] left = editable.getSpans(0, start, IPlaceholderSpan.class);
+            sorted = true;
+            mComparator.mEditable = editable;
+            IPlaceholderSpan[] left;
+            if (mMode < MODE_MASK) {
+                int i;
+                for (i = start; i > 0; i--) {
+                    char holder = findPlaceholder(i);
+                    if (holder == 0) {
+                        break;
+                    }
+                }
+                start = i;
+                left = EMPTY_SPANS;
+            } else {
+                left = editable.getSpans(0, start, IPlaceholderSpan.class);
+                Arrays.sort(left, mComparator);
+            }
             IPlaceholderSpan[] right;
             if (start >= editable.length()) {
                 right = EMPTY_SPANS;
             } else {
                 right = editable.getSpans(start, editable.length(), IPlaceholderSpan.class);
+                Arrays.sort(right, mComparator);
             }
-            if (left.length == start) {
+            mComparator.mEditable = null;
+            if (left.length == 0) {
+                spans = right;
+            } else if (left.length == start) {
                 start = 0;
                 spans = new IPlaceholderSpan[left.length + right.length];
                 System.arraycopy(left, 0, spans, 0, left.length);
                 System.arraycopy(right, 0, spans, left.length, right.length);
-            } else if (left.length > 0) {
-                mComparator.mEditable = editable;
-                Arrays.sort(left, mComparator);
-                mComparator.mEditable = null;
+            } else {
                 int last = start - 1;
                 int index;
                 for (index = left.length - 1; index >= 0; index--) {
@@ -969,21 +987,18 @@ public class FormattedEditText extends AppCompatEditText {
                     System.arraycopy(left, index, spans, 0, leftLength);
                     System.arraycopy(right, 0, spans, leftLength, right.length);
                 }
-            } else {
-                spans = right;
             }
         } else {
+            sorted = false;
             spans = editable.getSpans(0, editable.length(), IPlaceholderSpan.class);
         }
-        if (spans.length > 0) {
-            if (spans.length == editable.length() - start) {
-                editable.delete(start, editable.length());
-                if (start == 0 && isNeedClearText()) {
-                    return -1;
-                }
-            } else {
-                clearNonEmptySpans(editable, spans);
+        if (spans.length == editable.length() - start) {
+            editable.delete(start, editable.length());
+            if (start == 0 && isNeedClearText()) {
+                return -1;
             }
+        } else if (spans.length > 0) {
+            clearNonEmptySpans(editable, spans, sorted);
         }
         return start;
     }
@@ -1008,10 +1023,12 @@ public class FormattedEditText extends AppCompatEditText {
         return count;
     }
 
-    private void clearNonEmptySpans(Editable editable, IPlaceholderSpan[] spans) {
-        mComparator.mEditable = editable;
-        Arrays.sort(spans, mComparator);
-        mComparator.mEditable = null;
+    private void clearNonEmptySpans(Editable editable, IPlaceholderSpan[] spans, boolean sorted) {
+        if (!sorted) {
+            mComparator.mEditable = editable;
+            Arrays.sort(spans, mComparator);
+            mComparator.mEditable = null;
+        }
         IPlaceholderSpan last = spans[0], current = spans[0];
         int lastStart = editable.getSpanStart(last);
         for (int i = 1; i < spans.length; i++) {

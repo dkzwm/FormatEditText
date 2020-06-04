@@ -105,8 +105,8 @@
         app:fet_clearDrawable="@drawable/icon_clear"
         app:fet_drawableGravity="fet_center"
         app:fet_drawablePadding="4dp"
-        app:fet_formatStyle="000 000 0000 0000 000*"
-        app:fet_hintText="100 000 2020 0101 000X"
+        app:fet_formatStyle="\\0\\00 000 0000 0000 000*"
+        app:fet_hintText="000 000 2020 0101 000X"
         app:fet_mode="mode_hint"
         app:fet_showHintWhileEmpty="false" />
 
@@ -119,6 +119,10 @@
         android:text="@string/mode_hint_desc"
         android:textSize="12sp" />
 
+    <EditText
+        android:id="@+id/editText_original"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
     <Button
         android:id="@+id/button_clear"
         android:layout_width="wrap_content"

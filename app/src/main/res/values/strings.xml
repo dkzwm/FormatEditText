@@ -5,7 +5,6 @@
     <string name="mode_simple_desc">FormatStyle: 334, Placeholder: -\nRealText: %s</string>
     <string name="mode_complex_desc">FormatStyle: +(86)-***-****-****, Mark: *\nRealText:%s</string>
     <string name="mode_mask_desc">FormatStyle: +(86)–000-0000-0000, EmptyPlaceholder: _\nRealText: %s</string>
-    <string name="mode_hint_desc">FormatStyle: 000 000 0000 0000 000*, HintText: 100 000 2020
-        0101 000X\nRealText: %s</string>
+    <string name="mode_hint_desc">FormatStyle: \\0\\00 000 0000 0000 000*, HintText: 000 000 2020 0101 000X\nRealText: %s</string>
     <string name="clear_logs">Clear Logs</string>
 </resources>

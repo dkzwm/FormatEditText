@@ -18,7 +18,7 @@ Download [Demo.apk](https://raw.githubusercontent.com/dkzwm/FormatEditText/maste
 Add the following dependency to your build.gradle file:
 ```
 dependencies {
-    implementation 'me.dkzwm.widget.fet:core:0.1.0'
+    implementation 'me.dkzwm.widget.fet:core:0.1.1'
 }
 ```
 If you need to use the old Android Support version, please see [0.0.8 README](https://github.com/dkzwm/FormatEditText/blob/v0.0.8/README_EN.md)

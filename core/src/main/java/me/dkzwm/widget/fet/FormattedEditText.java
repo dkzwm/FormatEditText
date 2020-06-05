@@ -566,7 +566,7 @@ public class FormattedEditText extends AppCompatEditText {
         SpannableStringBuilder value = new SpannableStringBuilder(editable);
         IPlaceholderSpan[] spans;
         if (mMode == MODE_NONE) {
-            spans = new IPlaceholderSpan[0];
+            spans = EMPTY_SPANS;
         } else if (mMode < MODE_MASK) {
             spans =
                     value.getSpans(

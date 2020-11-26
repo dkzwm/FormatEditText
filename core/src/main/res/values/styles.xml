@@ -1,10 +1,20 @@
 <resources>
+    <declare-styleable name="ClearEditText">
+        <attr name="fet_clearDrawable" format="reference" />
+        <attr name="fet_drawablePadding" format="dimension" />
+        <attr name="fet_drawableGravity" format="enum">
+            <enum name="fet_top" value="0" />
+            <enum name="fet_center" value="1" />
+            <enum name="fet_bottom" value="2" />
+        </attr>
+    </declare-styleable>
     <declare-styleable name="FormattedEditText">
         <attr name="fet_mode" format="enum">
             <enum name="mode_simple" value="0" />
             <enum name="mode_complex" value="1" />
             <enum name="mode_mask" value="2" />
             <enum name="mode_hint" value="3" />
+            <enum name="mode_money" value="4" />
         </attr>
         <attr name="fet_formatStyle" format="string" />
         <attr name="fet_placeholder" format="string" />
@@ -13,12 +23,13 @@
         <attr name="fet_hintText" format="string" />
         <attr name="fet_mark" format="string" />
         <attr name="fet_showHintWhileEmpty" format="boolean" />
-        <attr name="fet_clearDrawable" format="reference" />
-        <attr name="fet_drawablePadding" format="dimension" />
-        <attr name="fet_drawableGravity" format="enum">
-            <enum name="fet_top" value="0" />
-            <enum name="fet_center" value="1" />
-            <enum name="fet_bottom" value="2" />
-        </attr>
+    </declare-styleable>
+    <declare-styleable name="MaskNumberEditText">
+        <attr name="fet_decimalLength" format="integer" />
+        <attr name="fet_currencySymbol" format="string" />
+        <attr name="fet_currencySymbolTextColor" format="color" />
+        <attr name="fet_showThousandsSeparator" format="boolean" />
+        <attr name="fet_autoFillNumbers" format="boolean" />
+        <attr name="fet_autoFillNumbersTextColor" format="color" />
     </declare-styleable>
 </resources>

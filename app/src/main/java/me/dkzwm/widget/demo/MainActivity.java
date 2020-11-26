@@ -1,7 +1,9 @@
 package me.dkzwm.widget.demo;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
@@ -11,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import java.util.Locale;
 import me.dkzwm.widget.fet.FormattedEditText;
+import me.dkzwm.widget.fet.MaskNumberEditText;
 
 /**
  * Created by dkzwm on 2017/2/23.
@@ -123,6 +126,31 @@ public class MainActivity extends AppCompatActivity {
                 String.format(getString(R.string.mode_mask_desc), editTextMask.getRealText()));
         final TextView textViewHint = findViewById(R.id.textView_hint);
         final FormattedEditText editTextHint = findViewById(R.id.formattedEditText_hint);
+        FormattedEditText.Config.create()
+                .mode(FormattedEditText.MODE_HINT) // 提示模式
+                .formatStyle("000 000 0000 0000 000X") // 格式化样式
+                .maskFilter(
+                        "X",
+                        new FormattedEditText.Matcher() {
+                            @Override
+                            public boolean hasMatch(String previousText, String value) {
+                                return TextUtils.isDigitsOnly(value)
+                                        || value.toUpperCase().equals("X");
+                            }
+                        })
+                .maskFilter(
+                        "0",
+                        new FormattedEditText.Matcher() {
+                            @Override
+                            public boolean hasMatch(String previousText, String value) {
+                                return TextUtils.isDigitsOnly(value);
+                            }
+                        }) // 自定义掩码匹配
+                .hintText(
+                        "100 000 2020 0101 000X") // 提示文字，不同于默认提示文字（android:hint），会在输入字符后依然显示，必须和格式化样式格式一致
+                .hintColor(Color.GRAY) // 提示文字颜色
+                .showHintWhileEmpty(true) // 是否清除数据后显示默认提示文字（android:hint），开启后不会用空白数据占位符填充数据位
+                .config(editTextHint);
         editTextHint.addTextChangedListener(
                 new TextWatcher() {
                     @Override
@@ -146,6 +174,32 @@ public class MainActivity extends AppCompatActivity {
                 });
         textViewHint.setText(
                 String.format(getString(R.string.mode_hint_desc), editTextHint.getRealText()));
+        final TextView textViewNumber = findViewById(R.id.textView_number);
+        final MaskNumberEditText editTextNumber = findViewById(R.id.maskNumberEditText_number);
+        editTextNumber.addTextChangedListener(
+                new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                        appendBeforeTextChangedLog(s, start, count, after);
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        appendOnTextChangedLog(s, start, before, count);
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        appendAfterTextChangedLog(s);
+                        textViewNumber.setText(
+                                String.format(
+                                        getString(R.string.mask_number_hint),
+                                        editTextNumber.getRealNumber()));
+                    }
+                });
+        textViewNumber.setText(
+                String.format(
+                        getString(R.string.mask_number_hint), editTextNumber.getRealNumber()));
     }
 
     private void checkSimpleValid(EditText editText) {

@@ -1,27 +1,29 @@
 # FormatEditText
-## English| [中文](README.md) 
+## English| [中文](README.md)
 
-FormatEditText can be used as a number formatted text input box, which can be used to format phone numbers, format ID numbers, format bank card numbers, etc.
+ **This library provides three classes for use:**
+ - `ClearEditText` Can be used as a text input box with clear function.
+ - `FormattedEditText` Can be used as a mask text input box.
+ - `MaskNumberEditText` Can be used as a number or amount text input box.
 
 ## Features:
  - Support configuration format style
- - Support configuration hint text (MODE = `MODE_HINT`)
+ - Support configuration hint text
  - Support paste and the cursor will auto follow
  - Automatic append or delete placeholder
  - Support for configuration clear icon without occupying the position of CompoundDrawables
 
 ## Demo
-Download [Demo.apk](https://raw.githubusercontent.com/dkzwm/FormatEditText/master/demo/demo.apk)    
+Download [Demo.apk](https://github.com/dkzwm/FormatEditText/raw/develop/apk/demo.apk)
 ## Snapshot
 <img src='snapshot.gif'></img>
 ## Installation
 Add the following dependency to your build.gradle file:
 ```
 dependencies {
-    implementation 'me.dkzwm.widget.fet:core:0.1.1'
+    implementation 'me.dkzwm.widget.fet:core:0.2.0'
 }
 ```
-If you need to use the old Android Support version, please see [0.0.8 README](https://github.com/dkzwm/FormatEditText/blob/v0.0.8/README_EN.md)
 ## How to used
 #### In Xml
 ```
@@ -75,6 +77,17 @@ If you need to use the old Android Support version, please see [0.0.8 README](ht
     app:fet_hintText="100 000 2020 0101 000X"
     app:fet_mode="mode_hint"
     app:fet_showHintWhileEmpty="false" />
+
+<me.dkzwm.widget.fet.MaskNumberEditText
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:fet_clearDrawable="@drawable/icon_clear"
+    app:fet_drawableGravity="fet_center"
+    app:fet_drawablePadding="4dp"
+    app:fet_autoFillDecimal="false"
+    app:fet_currencySymbol="$"
+    app:fet_decimalLength="2"
+    app:fet_showThousandsSeparator="true" />
 ```
 ####  In Java
 ```
@@ -95,14 +108,39 @@ FormattedEditText.Config.create()
         .showHintWhileEmpty(true)
         .config(editText);
 FormattedEditText.Config.create()
-        .mode(FormattedEditText.MODE_HINT)
-        .formatStyle("+(86)-000-0000-0000")
-        .hintText("+(86)-130-1234-5678")
+        .mode(FormattedEditText.MODE_HINT) //提示模式
+        .formatStyle("000 000 0000 0000 000X") //格式化样式
+        .maskFilter("X", new FormattedEditText.Matcher() {
+            @Override
+            public boolean hasMatch(String previousText, String value) {
+                return TextUtils.isDigitsOnly(value) || value.toUpperCase().equals("X");
+            }
+        })
+        .maskFilter("0", new FormattedEditText.Matcher() {
+            @Override
+            public boolean hasMatch(String previousText, String value) {
+                return TextUtils.isDigitsOnly(value);
+            }
+        })
+        .hintText("100 000 2020 0101 000X")
         .hintColor(Color.GRAY)
         .showHintWhileEmpty(true)
         .config(editText);
+MaskNumberEditText editText = new MaskNumberEditText(context);
+editText.setShowThousandsSeparator(true);
+editText.setAutoFillDecimal(true);
+editText.setDecimalLength(2);
+editText.setCurrencySymbol("￥");
 ```
-#### Xml attr 
+#### Xml attr
+##### ClearEditText
+|Name|Format|Desc|
+|:---:|:---:|:---:|
+|fet_clearDrawable|reference|Set the clear icon|
+|fet_drawableGravity|enum|Set the gravity of clear icon，support `GRAVITY_TOP`、`GRAVITY_CENTER`、`GRAVITY_BOTTOM`，(default`GRAVITY_CENTER`)|
+|fet_drawablePadding|dimension|Set the padding of clear icon|
+
+##### FormattedEditText
 |Name|Format|Desc|
 |:---:|:---:|:---:|
 |fet_mode|enum|Set the mode， `MODE_SIMPLE`/`MODE_COMPLEX`/`MODE_MASK`/`MODE_HINT`|
@@ -113,12 +151,18 @@ FormattedEditText.Config.create()
 |fet_hintText|string|Set the hint text，Only set when `fet_mode` is `MODE_HINT`, the hint text style must be conform to formatting style|
 |fet_hintTextColor|color|Set the hint text color，Only set when `fet_mode` is `MODE_HINT`|
 |fet_showHintWhileEmpty|boolean|Set whether to display the default hint text（android:hint）after clearing the data，Only set when `fet_mode` is `MODE_MASK` or `MODE_HINT`|
-|fet_clearDrawable|reference|Set the clear icon|
-|fet_drawableGravity|enum|Set the gravity of clear icon，support `GRAVITY_TOP`、`GRAVITY_CENTER`、`GRAVITY_BOTTOM`，(default`GRAVITY_CENTER`)|
-|fet_drawablePadding|dimension|Set the padding of clear icon|
 
+##### MaskNumberEditText
+|Name|Format|Desc|
+|:---:|:---:|:---:|
+|fet_decimalLength|integer|Specify the length of decimal places|
+|fet_currencySymbol|string|Specify the currency symbol|
+|fet_currencySymbolTextColor|string|Specify the text color of the currency symbol|
+|fet_showThousandsSeparator|boolean|Specify whether to display thousands separator|
+|fet_autoFillNumbers|boolean|Specify whether to automatically fill in numbers|
+|fet_autoFillNumbersTextColor|boolean|Specify the text color of auto-filled numbers|
 #### Mask
-When the modes are `MODE_MASK` and` MODE_HINT`, the following characters in the formatting style have special meanings:
+`FormattedEditText` When the modes are `MODE_MASK` and` MODE_HINT`, the following characters in the formatting style have special meanings:
 
  - 0 \- Numeric mask, this will accept only numbers to be typed
  - A \- Letter mask, this will accept only alphabet letters to be typed

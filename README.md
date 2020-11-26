@@ -1,27 +1,29 @@
 # FormatEditText
 ## [English](README_EN.md) | 中文
 
-FormatEditText可以用来当做号码格式化文本输入框使用, 可以用来作为格式化手机号码、格式化身份证号码、格式化银行卡号码等.    
+ **本库提供3个类以供使用:**
+ - `ClearEditText` 可以用来当带清除功能的文本输入框使用.
+ - `FormattedEditText` 可以用来当做号码格式化文本输入框使用.
+ - `MaskNumberEditText` 可以用来当做数字或金额文本输入框使用.
 
 ## 特性:
  - 支持配置格式化样式
- - 支持配置输入提示(模式为`MODE_HINT`)
+ - 支持配置输入提示
  - 支持粘贴且光标自动跟随
  - 自动填充删除占位符
  - 支持配置清除图标且不会占用CompoundDrawables的位置
 
 ## 演示程序
-下载 [Demo.apk](https://raw.githubusercontent.com/dkzwm/FormatEditText/master/demo/demo.apk)    
+下载 [Demo.apk](https://github.com/dkzwm/FormatEditText/raw/develop/apk/demo.apk)
 ## 快照
 <img src='snapshot.gif'></img>
 ## 引入
 添加如下依赖到你的 build.gradle 文件:
 ```
 dependencies {
-    implementation 'me.dkzwm.widget.fet:core:0.1.1'
+    implementation 'me.dkzwm.widget.fet:core:0.2.0'
 }
 ```
-如果需要使用老的Android Support对应版本，请查看[0.0.8使用简介](https://github.com/dkzwm/FormatEditText/blob/v0.0.8/README.md)
 ## 使用
 #### 在Xml中配置
 ```
@@ -75,6 +77,17 @@ dependencies {
     app:fet_hintText="100 000 2020 0101 000X"
     app:fet_mode="mode_hint"
     app:fet_showHintWhileEmpty="false" />
+
+<me.dkzwm.widget.fet.MaskNumberEditText
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:fet_clearDrawable="@drawable/icon_clear"
+    app:fet_drawableGravity="fet_center"
+    app:fet_drawablePadding="4dp"
+    app:fet_autoFillDecimal="false"
+    app:fet_currencySymbol="￥"
+    app:fet_decimalLength="2"
+    app:fet_showThousandsSeparator="true" />
 ```
 ####  Java代码配置
 ```
@@ -96,13 +109,38 @@ FormattedEditText.Config.create()
         .config(editText);
 FormattedEditText.Config.create()
         .mode(FormattedEditText.MODE_HINT) //提示模式
-        .formatStyle("+(86)-000-0000-0000") //格式化样式
-        .hintText("+(86)-130-1234-5678") //提示文字，不同于默认提示文字（android:hint），会在输入字符后依然显示，必须和格式化样式格式一致
+        .formatStyle("000 000 0000 0000 000X") //格式化样式
+        .maskFilter("X", new FormattedEditText.Matcher() {
+            @Override
+            public boolean hasMatch(String previousText, String value) {
+                return TextUtils.isDigitsOnly(value) || value.toUpperCase().equals("X");
+            }
+        })//自定义掩码匹配
+        .maskFilter("0", new FormattedEditText.Matcher() {
+            @Override
+            public boolean hasMatch(String previousText, String value) {
+                return TextUtils.isDigitsOnly(value);
+            }
+        })//自定义掩码匹配
+        .hintText("100 000 2020 0101 000X") //提示文字，不同于默认提示文字（android:hint），会在输入字符后依然显示，必须和格式化样式格式一致
         .hintColor(Color.GRAY) //提示文字颜色
         .showHintWhileEmpty(true) //是否清除数据后显示默认提示文字（android:hint），开启后不会用空白数据占位符填充数据位
         .config(editText);
+MaskNumberEditText editText = new MaskNumberEditText(context);
+editText.setShowThousandsSeparator(true);//是否显示千位分隔符`,`
+editText.setAutoFillDecimal(true);//是否自动填充小数，如设置小数保留2位，那么当位数不足时会自动填充`0`
+editText.setDecimalLength(2);//小数位长度
+editText.setCurrencySymbol("￥");//设置货币符号，不设置即不显示
 ```
-#### Xml属性 
+#### Xml属性
+##### ClearEditText
+|名称|类型|描述|
+|:---:|:---:|:---:|
+|fet_clearDrawable|reference|指定删除图标|
+|fet_drawableGravity|enum|指定删除图标的对齐方式，支持`GRAVITY_TOP`、`GRAVITY_CENTER`、`GRAVITY_BOTTOM`，默认为`GRAVITY_CENTER`，即居中对齐|
+|fet_drawablePadding|dimension|指定删除图标的填充大小|
+
+##### FormattedEditText
 |名称|类型|描述|
 |:---:|:---:|:---:|
 |fet_mode|enum|指定模式，支持`MODE_SIMPLE`（简单模式）、`MODE_COMPLEX`(组合模式)、`MODE_MASK`(掩码匹配模式)、`MODE_HINT`(提示模式)|
@@ -113,12 +151,18 @@ FormattedEditText.Config.create()
 |fet_hintText|string|指定提示文字，仅当`fet_mode`为`MODE_HINT`时设置会起作用，必须和格式化样式格式一致|
 |fet_hintTextColor|color|指定提示文字颜色，仅当`fet_mode`为`MODE_HINT`时设置会起作用|
 |fet_showHintWhileEmpty|boolean|指定是否清除数据后显示默认提示文字（android:hint），仅当`fet_mode`为`MODE_MASK`和`MODE_HINT`时设置会起作用|
-|fet_clearDrawable|reference|指定删除图标|
-|fet_drawableGravity|enum|指定删除图标的对齐方式，支持`GRAVITY_TOP`、`GRAVITY_CENTER`、`GRAVITY_BOTTOM`，默认为`GRAVITY_CENTER`，即居中对齐|
-|fet_drawablePadding|dimension|指定删除图标的填充大小|
 
+##### MaskNumberEditText
+|名称|类型|描述|
+|:---:|:---:|:---:|
+|fet_decimalLength|integer|指定小数位长度|
+|fet_currencySymbol|string|指定货币符号|
+|fet_currencySymbolTextColor|string|指定货币符号文字颜色，不设置的话默认使用当前文字颜色|
+|fet_showThousandsSeparator|boolean|指定是否显示千位分隔符|
+|fet_autoFillNumbers|boolean|指定是否自动填充数字|
+|fet_autoFillNumbersTextColor|boolean|指定自动填充数字的文字颜色，不设置的话默认使用当前提示文字颜色|
 #### 掩码
-在模式为`MODE_MASK`和`MODE_HINT`时，格式化样式中的以下字符具有特殊含义：
+`FormattedEditText` 在模式为`MODE_MASK`和`MODE_HINT`时，格式化样式中的以下字符具有特殊含义：
 
  - 0 \- 数字掩码，只接受输入数字
  - A \- 英文字母掩码，只接受输入英文字母

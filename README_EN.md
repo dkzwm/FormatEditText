@@ -84,7 +84,7 @@ dependencies {
     app:fet_clearDrawable="@drawable/icon_clear"
     app:fet_drawableGravity="fet_center"
     app:fet_drawablePadding="4dp"
-    app:fet_autoFillDecimal="false"
+    app:fet_autoFillNumbers="false"
     app:fet_currencySymbol="$"
     app:fet_decimalLength="2"
     app:fet_showThousandsSeparator="true" />
@@ -128,7 +128,7 @@ FormattedEditText.Config.create()
         .config(editText);
 MaskNumberEditText editText = new MaskNumberEditText(context);
 editText.setShowThousandsSeparator(true);
-editText.setAutoFillDecimal(true);
+editText.setAutoFillNumbers(true);
 editText.setDecimalLength(2);
 editText.setCurrencySymbol("￥");
 ```

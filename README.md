@@ -84,7 +84,7 @@ dependencies {
     app:fet_clearDrawable="@drawable/icon_clear"
     app:fet_drawableGravity="fet_center"
     app:fet_drawablePadding="4dp"
-    app:fet_autoFillDecimal="false"
+    app:fet_autoFillNumbers="false"
     app:fet_currencySymbol="￥"
     app:fet_decimalLength="2"
     app:fet_showThousandsSeparator="true" />
@@ -128,7 +128,7 @@ FormattedEditText.Config.create()
         .config(editText);
 MaskNumberEditText editText = new MaskNumberEditText(context);
 editText.setShowThousandsSeparator(true);//是否显示千位分隔符`,`
-editText.setAutoFillDecimal(true);//是否自动填充小数，如设置小数保留2位，那么当位数不足时会自动填充`0`
+editText.setAutoFillNumbers(true);//是否自动填充小数，如设置小数保留2位，那么当位数不足时会自动填充`0`
 editText.setDecimalLength(2);//小数位长度
 editText.setCurrencySymbol("￥");//设置货币符号，不设置即不显示
 ```

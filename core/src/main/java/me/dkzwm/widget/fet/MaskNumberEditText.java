@@ -371,7 +371,7 @@ public class MaskNumberEditText extends ClearEditText {
         if (editable.length() > 0) {
             if (editable.charAt(0) == THOUSANDS_SEPARATOR_CHAR) {
                 editable.delete(0, 1);
-            } else if (mAutoFillNumbers && editable.charAt(0) == DECIMAL_POINT_CHAR) {
+            } else if (editable.charAt(0) == DECIMAL_POINT_CHAR) {
                 editable.insert(0, ZERO_PLACEHOLDER);
                 editable.setSpan(
                         new ZeroIntegerSpan(getFilledTextColorForSpan()),

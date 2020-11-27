@@ -3,7 +3,7 @@
 
  **本库提供3个类以供使用:**
  - `ClearEditText` 可以用来当带清除功能的文本输入框使用.
- - `FormattedEditText` 可以用来当做号码格式化文本输入框使用.
+ - `FormattedEditText` 可以用来当做格式化文本输入框使用，支持任意字符按指定规则进行格式化.
  - `MaskNumberEditText` 可以用来当做数字或金额文本输入框使用.
 
 ## 特性:

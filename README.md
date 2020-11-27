@@ -14,7 +14,7 @@
  - 支持配置清除图标且不会占用CompoundDrawables的位置
 
 ## 演示程序
-下载 [Demo.apk](https://github.com/dkzwm/FormatEditText/raw/develop/apk/demo.apk)
+下载 [Demo.apk](https://github.com/dkzwm/FormatEditText/raw/master/apk/demo.apk)
 ## 快照
 <img src='snapshot.gif'></img>
 ## 引入

@@ -14,7 +14,7 @@
  - Support for configuration clear icon without occupying the position of CompoundDrawables
 
 ## Demo
-Download [Demo.apk](https://github.com/dkzwm/FormatEditText/raw/develop/apk/demo.apk)
+Download [Demo.apk](https://github.com/dkzwm/FormatEditText/raw/master/apk/demo.apk)
 ## Snapshot
 <img src='snapshot.gif'></img>
 ## Installation

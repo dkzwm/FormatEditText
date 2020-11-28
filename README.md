@@ -14,7 +14,7 @@
  - 支持配置清除图标且不会占用CompoundDrawables的位置
 
 ## 演示程序
-下载 [Demo.apk](https://github.com/dkzwm/FormatEditText/raw/develop/apk/demo.apk)
+下载 [Demo.apk](https://github.com/dkzwm/FormatEditText/raw/master/apk/demo.apk)
 ## 快照
 <img src='snapshot.gif'></img>
 ## 引入
@@ -131,6 +131,7 @@ editText.setShowThousandsSeparator(true);//是否显示千位分隔符`,`
 editText.setAutoFillNumbers(true);//是否自动填充小数，如设置小数保留2位，那么当位数不足时会自动填充`0`
 editText.setDecimalLength(2);//小数位长度
 editText.setCurrencySymbol("￥");//设置货币符号，不设置即不显示
+editText.setMaxNumberValue(6666.66)//指定能输入的最大数值
 ```
 #### Xml属性
 ##### ClearEditText
@@ -161,6 +162,7 @@ editText.setCurrencySymbol("￥");//设置货币符号，不设置即不显示
 |fet_showThousandsSeparator|boolean|指定是否显示千位分隔符|
 |fet_autoFillNumbers|boolean|指定是否自动填充数字|
 |fet_autoFillNumbersTextColor|boolean|指定自动填充数字的文字颜色，不设置的话默认使用当前提示文字颜色|
+|fet_maxNumberValue|string|指定能输入的最大数值|
 #### 掩码
 `FormattedEditText` 在模式为`MODE_MASK`和`MODE_HINT`时，格式化样式中的以下字符具有特殊含义：
 

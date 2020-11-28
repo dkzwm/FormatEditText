@@ -131,6 +131,7 @@ editText.setShowThousandsSeparator(true);
 editText.setAutoFillNumbers(true);
 editText.setDecimalLength(2);
 editText.setCurrencySymbol("￥");
+editText.setMaxNumberValue(6666.66)
 ```
 #### Xml attr
 ##### ClearEditText
@@ -161,6 +162,7 @@ editText.setCurrencySymbol("￥");
 |fet_showThousandsSeparator|boolean|Specify whether to display thousands separator|
 |fet_autoFillNumbers|boolean|Specify whether to automatically fill in numbers|
 |fet_autoFillNumbersTextColor|boolean|Specify the text color of auto-filled numbers|
+|fet_maxNumberValue|string|Specify the maximum number value that can be entered|
 #### Mask
 `FormattedEditText` When the modes are `MODE_MASK` and` MODE_HINT`, the following characters in the formatting style have special meanings:
 

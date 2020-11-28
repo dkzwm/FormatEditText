@@ -29,12 +29,16 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.Editable;
 import android.text.InputFilter;
+import android.text.NoCopySpan;
 import android.text.Selection;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.util.AttributeSet;
+import android.util.Log;
+import androidx.annotation.CallSuper;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,6 +64,7 @@ public class MaskNumberEditText extends ClearEditText {
     private String mCurrencySymbol;
     private int mCurrencySymbolTextColor = -1;
     private int mDecimalLength = -1;
+    private double mMaxNumberValue = -1;
     private boolean mAutoFillNumbers = false;
     private int mAutoFillNumbersTextColor = -1;
     private boolean mShowThousandsSeparator = true;
@@ -98,6 +103,17 @@ public class MaskNumberEditText extends ClearEditText {
                 setShowThousandsSeparator(
                         ta.getBoolean(
                                 R.styleable.MaskNumberEditText_fet_showThousandsSeparator, true));
+                String maxValue = ta.getString(R.styleable.MaskNumberEditText_fet_maxNumberValue);
+                if (maxValue != null) {
+                    try {
+                        double max = Double.parseDouble(maxValue);
+                        setMaxNumberValue(max);
+                    } catch (NumberFormatException e) {
+                        Log.e(
+                                getClass().getSimpleName(),
+                                "The value of attribute fet_maxNumberValue is not a Double");
+                    }
+                }
             } finally {
                 ta.recycle();
             }
@@ -109,7 +125,7 @@ public class MaskNumberEditText extends ClearEditText {
             }
             return;
         }
-        formatNumber(text);
+        formatEditable(text);
         Selection.setSelection(text, text.length());
     }
 
@@ -126,6 +142,29 @@ public class MaskNumberEditText extends ClearEditText {
         if (mWatchers != null) {
             mWatchers.remove(watcher);
         }
+    }
+
+    @Override
+    @CallSuper
+    public void setFilters(InputFilter[] filters) {
+        if (filters == null) {
+            throw new IllegalArgumentException("filters can not be null");
+        }
+        boolean havingFilter = false;
+        for (InputFilter filter : filters) {
+            if (filter instanceof MaxNumberValueFilter) {
+                havingFilter = true;
+                break;
+            }
+        }
+        if (!havingFilter) {
+            InputFilter[] replaceFilters = new InputFilter[filters.length + 1];
+            replaceFilters[0] = new MaxNumberValueFilter();
+            System.arraycopy(filters, 0, replaceFilters, 1, filters.length);
+            super.setFilters(replaceFilters);
+            return;
+        }
+        super.setFilters(filters);
     }
 
     public String getCurrencySymbol() {
@@ -180,6 +219,18 @@ public class MaskNumberEditText extends ClearEditText {
         mShowThousandsSeparator = showThousandsSeparator;
     }
 
+    public double getMaxNumberValue() {
+        return mMaxNumberValue;
+    }
+
+    public void setMaxNumberValue(double maxNumberValue) {
+        if (maxNumberValue < 0) {
+            throw new IllegalArgumentException(
+                    "maxNumberValue must be greater than or equal to zero");
+        }
+        mMaxNumberValue = maxNumberValue;
+    }
+
     public String getRealNumber() {
         return getRealNumber(false);
     }
@@ -189,10 +240,21 @@ public class MaskNumberEditText extends ClearEditText {
         if (editable == null || editable.length() == 0) {
             return "";
         }
-        SpannableStringBuilder value = new SpannableStringBuilder(editable);
-        clearPlaceholders(value);
-        final String realText = value.toString();
-        value.clear();
+        SpannableStringBuilder builder = new SpannableStringBuilder(editable);
+        String number = getRealNumber(builder, saved);
+        if (!saved && TextUtils.isEmpty(number)) {
+            return "0";
+        }
+        return number;
+    }
+
+    private String getRealNumber(Editable editable, boolean saved) {
+        if (editable == null || editable.length() == 0) {
+            return "";
+        }
+        clearPlaceholders(editable);
+        final String realText = editable.toString();
+        editable.clear();
         if (!saved) {
             if (realText.length() > 0) {
                 if (realText.charAt(realText.length() - 1) == DECIMAL_POINT_CHAR) {
@@ -242,7 +304,7 @@ public class MaskNumberEditText extends ClearEditText {
         }
     }
 
-    private void formatNumber(final Editable editable) {
+    private void formatEditable(final Editable editable) {
         mIsFormatted = true;
         final boolean filter = mFilterRestoreTextChangeEvent;
         super.removeTextChangedListener(mTextWatcher);
@@ -254,6 +316,24 @@ public class MaskNumberEditText extends ClearEditText {
             selectionEnd = Selection.getSelectionEnd(editable);
             editable.setSpan(SELECTION_SPAN, selectionStart, selectionEnd, Spanned.SPAN_MARK_MARK);
         }
+        formatNumber(editable);
+        if (!filter) {
+            selectionStart = editable.getSpanStart(SELECTION_SPAN);
+            selectionEnd = editable.getSpanEnd(SELECTION_SPAN);
+            editable.removeSpan(SELECTION_SPAN);
+            editable.setFilters(filters);
+            Selection.setSelection(
+                    editable,
+                    Math.min(selectionStart, editable.length()),
+                    Math.min(selectionEnd, editable.length()));
+        } else {
+            editable.setFilters(filters);
+        }
+        mIsFormatted = false;
+        super.addTextChangedListener(mTextWatcher);
+    }
+
+    private void formatNumber(final Editable editable) {
         clearPlaceholders(editable);
         DecimalPointSpan[] spans = editable.getSpans(0, editable.length(), DecimalPointSpan.class);
         if (spans.length > 0) {
@@ -313,20 +393,6 @@ public class MaskNumberEditText extends ClearEditText {
             }
         }
         formatCurrencySymbol(editable);
-        if (!filter) {
-            selectionStart = editable.getSpanStart(SELECTION_SPAN);
-            selectionEnd = editable.getSpanEnd(SELECTION_SPAN);
-            editable.removeSpan(SELECTION_SPAN);
-            editable.setFilters(filters);
-            Selection.setSelection(
-                    editable,
-                    Math.min(selectionStart, editable.length()),
-                    Math.min(selectionEnd, editable.length()));
-        } else {
-            editable.setFilters(filters);
-        }
-        mIsFormatted = false;
-        super.addTextChangedListener(mTextWatcher);
     }
 
     private void formatCurrencySymbol(Editable editable) {
@@ -576,6 +642,73 @@ public class MaskNumberEditText extends ClearEditText {
         }
     }
 
+    private class MaxNumberValueFilter implements InputFilter {
+        private SpannableStringBuilder mBuilder;
+
+        @Override
+        public CharSequence filter(
+                CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+            if (mRestoring || mIsFormatted) {
+                return null;
+            }
+            if (mMaxNumberValue != -1) {
+                String destString = dest.toString();
+                Object[] spans = dest.getSpans(0, dest.length(), Object.class);
+                if (mBuilder == null) {
+                    mBuilder = new SpannableStringBuilder();
+                }
+                resetDestSpanned(dest, destString, spans);
+                if (dstart - dend != 0) {
+                    mBuilder.delete(dstart, dend);
+                } else {
+                    String number = getRealNumber(mBuilder, false);
+                    if (isLarger(number)) {
+                        return "";
+                    }
+                }
+                int endIndex = end;
+                for (int i = start; i < end; i++) {
+                    resetDestSpanned(dest, destString, spans);
+                    mBuilder.insert(dstart, source.subSequence(start, i + 1));
+                    formatNumber(mBuilder);
+                    String number = getRealNumber(mBuilder, false);
+                    if (isLarger(number)) {
+                        endIndex = i;
+                        break;
+                    }
+                }
+                mBuilder.clear();
+                return source.subSequence(start, endIndex);
+            }
+            return null;
+        }
+
+        private void resetDestSpanned(Spanned dest, String destString, Object[] spans) {
+            mBuilder.clear();
+            mBuilder.append(destString);
+            for (Object obj : spans) {
+                if (obj instanceof NoCopySpan) {
+                    continue;
+                }
+                mBuilder.setSpan(
+                        obj, dest.getSpanStart(obj), dest.getSpanEnd(obj), dest.getSpanFlags(obj));
+            }
+        }
+
+        private boolean isLarger(String number) {
+            if (TextUtils.isEmpty(number)) {
+                return mMaxNumberValue < 0;
+            }
+            try {
+                double value = Double.parseDouble(number);
+                return mMaxNumberValue < value;
+            } catch (NumberFormatException e) {
+                // ignored
+            }
+            return true;
+        }
+    }
+
     private class MaskNumberTextWatcher implements TextWatcher {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -592,7 +725,7 @@ public class MaskNumberEditText extends ClearEditText {
             }
             sendOnTextChanged(s, start, before, count);
             if (!mIsFormatted && s instanceof Editable) {
-                formatNumber((Editable) s);
+                formatEditable((Editable) s);
             }
         }
 

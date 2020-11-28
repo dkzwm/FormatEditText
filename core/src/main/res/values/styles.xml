@@ -31,5 +31,6 @@
         <attr name="fet_showThousandsSeparator" format="boolean" />
         <attr name="fet_autoFillNumbers" format="boolean" />
         <attr name="fet_autoFillNumbersTextColor" format="color" />
+        <attr name="fet_maxNumberValue" format="string" />
     </declare-styleable>
 </resources>

@@ -20,8 +20,12 @@
 ## 引入
 添加如下依赖到你的 build.gradle 文件:
 ```
+repositories {
+    ...
+    maven { url 'https://jitpack.io' }
+}
 dependencies {
-    implementation 'me.dkzwm.widget.fet:core:0.2.0'
+    implementation 'com.github.dkzwm:FormatEditText:0.2.0'
 }
 ```
 ## 使用

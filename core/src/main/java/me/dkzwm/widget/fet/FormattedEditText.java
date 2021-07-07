@@ -546,31 +546,33 @@ public class FormattedEditText extends ClearEditText {
                 nextCharIsText = true;
                 indexInStyle += Character.charCount(ESCAPE_MASK_POINT);
             } else {
-                String cur = new StringBuilder().appendCodePoint(charInStyle).toString();
+                String stringInStyle =
+                        mFormatStyle.substring(indexInStyle, indexInStyle + charInStyleCount);
                 if (mPlaceholderFilters != null) {
                     PlaceholderConverter converter = mPlaceholderFilters.get(charInStyle);
                     if (converter != null) {
                         char[] chars = new char[indexInText];
                         editable.getChars(0, indexInText, chars, 0);
-                        String textInStyle = converter.convert(String.valueOf(chars), cur);
+                        String textInStyle =
+                                converter.convert(String.valueOf(chars), stringInStyle);
                         if (textInStyle == null
                                 || textInStyle.codePointCount(0, textInStyle.length()) != 1) {
                             throw new IllegalArgumentException(
-                                    "the converted must be length one character");
+                                    "The converted must be length one character");
                         }
-                        cur = textInStyle;
+                        stringInStyle = textInStyle;
+                        charInStyleCount = stringInStyle.length();
                     }
                 }
-                int charCount = cur.length();
-                editable.insert(indexInText, cur);
+                editable.insert(indexInText, stringInStyle);
                 editable.setSpan(
                         new PlaceholderSpan(),
                         indexInText,
-                        indexInText + charCount,
+                        indexInText + charInStyleCount,
                         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 nextCharIsText = false;
-                indexInText += charCount;
-                indexInStyle += charCount;
+                indexInText += charInStyleCount;
+                indexInStyle += charInStyleCount;
             }
         }
         if (!havingEmptyOrHint && indexOfLastLiteral != editable.length()) {

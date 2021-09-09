@@ -20,12 +20,8 @@ Download [Demo.apk](https://github.com/dkzwm/FormatEditText/raw/master/apk/demo.
 ## Installation
 Add the following dependency to your build.gradle file:
 ```
-repositories {
-    ...
-    maven { url 'https://jitpack.io' }
-}
 dependencies {
-    implementation 'com.github.dkzwm:FormatEditText:0.2.0'
+    implementation 'com.github.dkzwm:fet-core:0.2.1'
 }
 ```
 ## How to used

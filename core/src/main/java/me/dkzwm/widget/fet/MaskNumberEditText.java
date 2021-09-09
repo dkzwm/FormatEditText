@@ -339,7 +339,7 @@ public class MaskNumberEditText extends ClearEditText {
         if (spans.length > 0) {
             DecimalPointSpan span = spans[0];
             int start = editable.getSpanStart(span);
-            int index = editable.toString().indexOf(DECIMAL_POINT_CHAR);
+            int index = indexOfDecimalPointChar(editable);
             if (index != start) {
                 editable.delete(start, start + 1);
                 span = new DecimalPointSpan(getCurrentTextColor());
@@ -369,7 +369,7 @@ public class MaskNumberEditText extends ClearEditText {
                 }
             }
         } else {
-            int index = editable.toString().indexOf(DECIMAL_POINT_CHAR);
+            int index = indexOfDecimalPointChar(editable);
             if (index == -1) {
                 formatInteger(editable, editable.length());
                 if (mAutoFillNumbers && mDecimalLength > 0) {
@@ -389,10 +389,20 @@ public class MaskNumberEditText extends ClearEditText {
                         index + 1,
                         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 formatInteger(editable, index);
-                formatDecimal(editable, editable.toString().indexOf(DECIMAL_POINT_CHAR));
+                formatDecimal(editable, indexOfDecimalPointChar(editable));
             }
         }
         formatCurrencySymbol(editable);
+    }
+
+    private int indexOfDecimalPointChar(Editable editable) {
+        final int max = editable.length();
+        for (int i = 0; i < max; i++) {
+            if (editable.charAt(i) == DECIMAL_POINT_CHAR) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private void formatCurrencySymbol(Editable editable) {
